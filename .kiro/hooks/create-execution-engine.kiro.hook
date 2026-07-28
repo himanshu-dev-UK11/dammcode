@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Create Execution Directory",
+  "description": "Create the ai/execution directory for new execution engine components",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "mkdir \"c:\\Projects\\mycodingmaster\\ai\\execution\" 2>nul || echo \"Directory may already exist\""
+  }
+}

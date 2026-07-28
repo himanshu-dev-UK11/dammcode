@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Create UI Polish Spec v1.1",
+  "description": "Creating bugfix spec for MyCodingMaster v1.0 to document the Open Project fix and Version 1.0 bugfix sprint requirements",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": ""
+  }
+}

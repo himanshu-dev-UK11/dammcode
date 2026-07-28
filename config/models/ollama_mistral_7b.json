@@ -1,0 +1,16 @@
+{
+  "model_id": "mistral:7b",
+  "provider": "ollama",
+  "display_name": "Mistral 7B",
+  "context_window": 8192,
+  "max_output_tokens": 2048,
+  "type": "local",
+  "license": "Apache 2.0",
+  "cost_type": "free",
+  "priority": 11,
+  "version": "0.1",
+  "tags": ["general", "chat", "efficient"],
+  "supports_streaming": true,
+  "supports_function_calling": false,
+  "supports_vision": false
+}

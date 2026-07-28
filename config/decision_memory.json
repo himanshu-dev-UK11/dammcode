@@ -1,0 +1,15 @@
+{
+  "decisions": [
+    {
+      "decision_id": "169e985b",
+      "task_id": "t1",
+      "prompt": "prompt",
+      "choice": "chose model x",
+      "reasoning": "fastest available",
+      "outcome": "success",
+      "model_used": "qwen3:8b",
+      "timestamp": "2026-07-06T04:43:40.936258",
+      "metadata": {}
+    }
+  ]
+}

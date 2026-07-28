@@ -1,0 +1,45 @@
+{
+  "name": "MyCodingMaster v1.1 UI Polish",
+  "version": "1.0.0",
+  "description": "UI polish and professional UX improvements for MyCodingMaster v1.1",
+  "type": "feature",
+  "state": "in_progress",
+  "created": "2026-06-27",
+  "updated": "2026-06-27",
+  "author": "Kiro",
+  "files": [
+    "ui/colors.py",
+    "ui/theme.py",
+    "ui/explorer_panel.py",
+    "ui/project_panel.py",
+    "ui/editor/editor_tabs.py",
+    "ui/breadcrumb_bar.py",
+    "ui/ai_workspace/ai_engineering_workspace.py",
+    "ui/ai_workspace/current_task_section.py",
+    "ui/ai_workspace/execution_progress_section.py",
+    "ui/ai_workspace/conversation_section.py",
+    "ui/ai_workspace/execution_plan_section.py",
+    "ui/ai_workspace/context_section.py",
+    "ui/top_toolbar.py",
+    "ui/bottom_dock.py",
+    "ui/status_bar.py",
+    "ui/dashboard.py"
+  ],
+  "tags": ["ui", "polish", "ux", "frontend", "professional"],
+  "dependencies": [],
+  "related_specs": [
+    "mycodingmaster-v1-bugfix-sprint"
+  ],
+  "status": {
+    "requirements": "complete",
+    "design": "complete",
+    "tasks": "pending"
+  },
+  "priority": "high",
+  "deadline": "",
+  "flags": {
+    "no_backend": true,
+    "no_architecture_changes": true,
+    "frontend_only": true
+  }
+}

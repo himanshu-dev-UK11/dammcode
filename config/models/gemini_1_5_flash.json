@@ -1,0 +1,16 @@
+{
+  "model_id": "gemini-1.5-flash",
+  "provider": "gemini",
+  "display_name": "Gemini 1.5 Flash",
+  "context_window": 1048576,
+  "max_output_tokens": 8192,
+  "type": "cloud",
+  "license": "Google Terms",
+  "cost_type": "free_tier",
+  "priority": 18,
+  "version": "1.5",
+  "tags": ["fast", "large_context", "multimodal"],
+  "supports_streaming": true,
+  "supports_function_calling": true,
+  "supports_vision": true
+}

@@ -1,0 +1,16 @@
+{
+  "model_id": "nous-hermes2:latest",
+  "provider": "ollama",
+  "display_name": "Nous Hermes 2",
+  "context_window": 8192,
+  "max_output_tokens": 2048,
+  "type": "local",
+  "license": "Apache 2.0",
+  "cost_type": "free",
+  "priority": 9,
+  "version": "2.0",
+  "tags": ["general", "chat", "instruction"],
+  "supports_streaming": true,
+  "supports_function_calling": false,
+  "supports_vision": false
+}

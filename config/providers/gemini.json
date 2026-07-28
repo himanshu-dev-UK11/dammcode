@@ -1,0 +1,14 @@
+{
+  "provider_name": "gemini",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta",
+  "auth_type": "api_key",
+  "enabled": false,
+  "priority": 5,
+  "default_model": "gemini-1.5-flash",
+  "timeout_seconds": 30,
+  "retry_count": 3,
+  "supports_streaming": true,
+  "supports_tool_calling": true,
+  "supports_vision": true,
+  "supports_function_calling": true
+}

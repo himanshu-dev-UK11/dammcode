@@ -1,0 +1,22 @@
+{
+    "display_name": "Qwen 2.5 Coder 7B",
+    "provider": "ollama",
+    "model_id": "qwen2.5-coder:7b",
+    "context_window": 32768,
+    "max_output_tokens": 8192,
+    "type": "local",
+    "supports_streaming": true,
+    "supports_tool_calling": false,
+    "supports_vision": false,
+    "supports_function_calling": false,
+    "supports_reasoning": false,
+    "supports_code_editing": true,
+    "supports_file_upload": false,
+    "supports_images": false,
+    "supports_audio": false,
+    "license": "Apache 2.0",
+    "cost_type": "free",
+    "priority": 15,
+    "version": "2.5",
+    "tags": ["coding", "local", "ollama", "fast"]
+}

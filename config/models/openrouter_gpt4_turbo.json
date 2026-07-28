@@ -1,0 +1,16 @@
+{
+  "model_id": "openai/gpt-4-turbo",
+  "provider": "openrouter",
+  "display_name": "GPT-4 Turbo (OpenRouter)",
+  "context_window": 128000,
+  "max_output_tokens": 4096,
+  "type": "cloud",
+  "license": "OpenAI Terms",
+  "cost_type": "paid",
+  "priority": 25,
+  "version": "4",
+  "tags": ["powerful", "large_context", "reasoning"],
+  "supports_streaming": true,
+  "supports_function_calling": true,
+  "supports_vision": true
+}

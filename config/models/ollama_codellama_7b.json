@@ -1,0 +1,16 @@
+{
+  "model_id": "codellama:7b",
+  "provider": "ollama",
+  "display_name": "Code Llama 7B",
+  "context_window": 16384,
+  "max_output_tokens": 2048,
+  "type": "local",
+  "license": "Llama 2 Community License",
+  "cost_type": "free",
+  "priority": 13,
+  "version": "1.0",
+  "tags": ["coding", "code_completion", "fast"],
+  "supports_streaming": true,
+  "supports_function_calling": false,
+  "supports_vision": false
+}

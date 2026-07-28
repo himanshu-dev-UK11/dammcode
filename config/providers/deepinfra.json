@@ -1,0 +1,16 @@
+{
+    "provider_name": "deepinfra",
+    "endpoint": "https://api.deepinfra.com/v1/openai",
+    "auth_type": "api_key",
+    "api_key": "",
+    "enabled": false,
+    "priority": 6,
+    "default_model": "meta-llama/Meta-Llama-3-8B-Instruct",
+    "timeout_seconds": 30,
+    "retry_count": 3,
+    "supports_streaming": true,
+    "supports_tool_calling": false,
+    "supports_vision": false,
+    "supports_function_calling": false,
+    "connection_status": "uninitialized"
+}

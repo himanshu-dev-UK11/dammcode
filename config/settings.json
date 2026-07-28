@@ -1,0 +1,133 @@
+{
+    "theme": "dark",
+    "font_size": 12,
+    "auto_save": true,
+    "show_line_numbers": true,
+    "word_wrap": false,
+    "tab_size": 4,
+    "insert_spaces": true,
+    "general": {
+        "auto_save": false,
+        "auto_save_delay": 3000,
+        "restore_session": true,
+        "show_welcome": true,
+        "language": "en",
+        "theme": "system"
+    },
+    "appearance": {
+        "font_family": "Inter, Segoe UI, SF Pro Display, system-ui, sans-serif",
+        "font_size": 12,
+        "font_ligatures": true,
+        "line_height": 1.5,
+        "letter_spacing": 0,
+        "word_wrap": true,
+        "minimap": true,
+        "scrollbar_size": 8
+    },
+    "editor": {
+        "tab_size": 4,
+        "insert_spaces": true,
+        "render_whitespace": "none",
+        "cursor_blinking": true,
+        "cursor_style": "line",
+        "word_based_suggestions": true,
+        "automatic_completions": true,
+        "format_on_type": true,
+        "format_on_save": false
+    },
+    "workspace": {
+        "auto_scan": true,
+        "scan_delay": 1000,
+        "follow_symlinks": false,
+        "exclude_patterns": [
+            ".git",
+            "__pycache__",
+            "node_modules",
+            ".vscode",
+            ".idea"
+        ]
+    },
+    "models": {
+        "default_model": "auto",
+        "models": {
+            "qwen": {
+                "name": "Qwen 3 Coder Next",
+                "provider": "local",
+                "context_window": 32768,
+                "enabled": true
+            }
+        }
+    },
+    "ai": {
+        "auto_context": true,
+        "max_context_files": 10,
+        "max_tokens": 4096,
+        "temperature": 0.7,
+        "streaming": true,
+        "smart_suggestions": true,
+        "auto_verify": true
+    },
+    "git": {
+        "enabled": true,
+        "auto_refresh": true,
+        "refresh_interval": 5000,
+        "commit_on_save": false,
+        "push_on_close": false
+    },
+    "github": {
+        "enabled": false,
+        "token": "",
+        "username": "",
+        "default_branch": "main"
+    },
+    "keyboard": {
+        "shortcuts": {
+            "command_palette": [
+                "Ctrl+Shift+P"
+            ],
+            "new_file": [
+                "Ctrl+N"
+            ],
+            "open_folder": [
+                "Ctrl+K",
+                "Ctrl+O"
+            ],
+            "save": [
+                "Ctrl+S"
+            ],
+            "save_all": [
+                "Ctrl+Shift+S"
+            ],
+            "close": [
+                "Ctrl+W"
+            ],
+            "next_tab": [
+                "Ctrl+Tab"
+            ],
+            "prev_tab": [
+                "Ctrl+Shift+Tab"
+            ],
+            "run": [
+                "F5"
+            ],
+            "stop": [
+                "Shift+F5"
+            ],
+            "toggle_terminal": [
+                "Ctrl+`"
+            ],
+            "toggle_explorer": [
+                "Ctrl+B"
+            ],
+            "toggle_ai_panel": [
+                "Ctrl+\\"
+            ]
+        }
+    },
+    "window": {
+        "restore_layout": true,
+        "remember_position": true,
+        "remember_size": true,
+        "remember_maximized": true
+    }
+}

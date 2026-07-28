@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Create Sprint Tasks",
+  "description": "Create task list for v1.5.1 sprint",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": ""
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "model_id": "deepseek/deepseek-coder",
+  "provider": "openrouter",
+  "display_name": "DeepSeek Coder (OpenRouter)",
+  "context_window": 16384,
+  "max_output_tokens": 4096,
+  "type": "cloud",
+  "license": "DeepSeek License",
+  "cost_type": "paid",
+  "priority": 17,
+  "version": "1.0",
+  "tags": ["coding", "code_generation", "efficient"],
+  "supports_streaming": true,
+  "supports_function_calling": true,
+  "supports_vision": false
+}

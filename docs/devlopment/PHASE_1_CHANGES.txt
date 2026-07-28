@@ -1,0 +1,84 @@
+═══════════════════════════════════════════════════════════════════
+  PHASE 1: SIDEBAR TOGGLE BEHAVIOR — CHANGES SUMMARY
+═══════════════════════════════════════════════════════════════════
+
+Status: ✅ COMPLETE
+Date: 2026-07-14
+
+───────────────────────────────────────────────────────────────────
+  PROBLEM SOLVED
+───────────────────────────────────────────────────────────────────
+
+❌ BEFORE: Sidebar consumed space even when "hidden"
+✅ AFTER:  Sidebar fully hides and reclaims space
+
+❌ BEFORE: No clear way to hide sidebar
+✅ AFTER:  Click same activity button twice (like VS Code)
+
+───────────────────────────────────────────────────────────────────
+  FILES MODIFIED (2)
+───────────────────────────────────────────────────────────────────
+
+1. ui/enhanced_explorer.py (PremiumActivityBar)
+   • Added _active_activity tracking
+   • Modified _on_button_clicked() to detect double-click
+   • Updated set_collapsed() to deselect buttons
+   • Removed separate collapse button
+
+2. ui/main_window.py (MainWindow)
+   • Split toggle_explorer() into 3 methods:
+     - _show_sidebar() - Shows activity bar + explorer
+     - _hide_sidebar() - Hides activity bar + explorer
+     - _toggle_sidebar() - Toggles state
+   • Updated all _focus_* methods
+   • Connected collapse_requested signal
+
+───────────────────────────────────────────────────────────────────
+  KEY BEHAVIOR CHANGES
+───────────────────────────────────────────────────────────────────
+
+1. Click Explorer (first time)  → Sidebar shows
+2. Click Explorer (second time) → Sidebar FULLY hides
+3. Editor expands to fill space when sidebar hidden
+4. Ctrl+B still toggles sidebar
+5. All activity shortcuts still work
+
+───────────────────────────────────────────────────────────────────
+  SPACE RECLAMATION
+───────────────────────────────────────────────────────────────────
+
+Before:  46px + 220px = 266px wasted when "hidden"
+After:   0px = Full width reclaimed ✅
+
+───────────────────────────────────────────────────────────────────
+  TESTING STATUS
+───────────────────────────────────────────────────────────────────
+
+✅ Application starts without errors
+✅ No import errors
+✅ No syntax errors
+✅ No runtime exceptions
+✅ Toggle behavior works
+✅ Space reclamation works
+✅ All shortcuts functional
+
+───────────────────────────────────────────────────────────────────
+  VERIFICATION COMMANDS
+───────────────────────────────────────────────────────────────────
+
+Launch:
+  python main.py
+
+Test:
+  1. Click 📁 Explorer → Sidebar shows
+  2. Click 📁 Explorer → Sidebar hides (space reclaimed!)
+  3. Press Ctrl+B → Sidebar shows
+  4. Press Ctrl+B → Sidebar hides
+
+───────────────────────────────────────────────────────────────────
+  READY FOR PHASE 2
+───────────────────────────────────────────────────────────────────
+
+Next: Fix duplicate BottomDock architecture
+
+═══════════════════════════════════════════════════════════════════

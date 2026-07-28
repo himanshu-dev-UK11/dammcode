@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Create spec structure",
+  "description": "Create requirements-first spec structure and config for AI Engineering Workspace redesign",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": ""
+  }
+}

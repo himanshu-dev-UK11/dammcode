@@ -1,0 +1,80 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║                    WHERE IS THE TOGGLE BUTTON?                    ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+WHEN SIDEBAR IS VISIBLE:
+┌─────────────────────────────────────────────────────────────────┐
+│ File  Edit  View  Run  AI  Git  Window  Help                   │
+├─────────────────────────────────────────────────────────────────┤
+│ Project │ Run │ Git │ AI │ View │ Tools │ Window │ Help │ Actions▼│
+├──┬──────────────────────────────────────────┬───────────────────┤
+│☰ │ EXPLORER              + ⋯                │                   │
+│← │ ─────────────────────────────────────────│                   │
+│  │ 📁 mycodingmaster                        │                   │
+│A │  ├─ 📁 ai                                │     Editor        │
+│C │  ├─ 📁 ui                                │     Area          │
+│T │  └─ 📄 main.py                           │                   │
+│I │                                           │                   │
+│V │                                           │                   │
+│I │                                           │                   │
+│T │                                           │                   │
+│Y │                                           │                   │
+│  │                                           │                   │
+└──┴──────────────────────────────────────────┴───────────────────┘
+ ↑
+ └─ CLICK THIS BUTTON (top-left corner, always visible!)
+
+
+WHEN SIDEBAR IS HIDDEN:
+┌─────────────────────────────────────────────────────────────────┐
+│ File  Edit  View  Run  AI  Git  Window  Help                   │
+├─────────────────────────────────────────────────────────────────┤
+│ Project │ Run │ Git │ AI │ View │ Tools │ Window │ Help │ Actions▼│
+├─────────────────────────────────────────────────────────────────┤
+│›                                                                 │
+│←                                                                 │
+│                                                                  │
+│                     Editor Area (Full Width)                    │
+│                                                                  │
+│    # More space for coding!                                     │
+│    def my_function():                                           │
+│        return "Hello World"                                     │
+│                                                                  │
+│                                                                  │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+ ↑
+ └─ CLICK THIS BUTTON to bring sidebar back!
+
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                        BUTTON DETAILS                             ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+Position:   Top-left corner (10px from left, 10px below toolbar)
+Size:       36 × 36 pixels
+Icon:       ☰ (when visible) or › (when hidden)
+Color:      Dark semi-transparent background
+Hover:      Lights up when you hover over it
+Always:     VISIBLE - never hides!
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                         HOW TO USE                                ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+1. Look at the top-left corner
+2. See the floating button (☰ or ›)
+3. Click it
+4. Sidebar toggles on/off
+5. Done!
+
+That's it. No shortcuts. No menus. Just click the button.
+
+╔═══════════════════════════════════════════════════════════════════╗
+║                      WHAT THE ICONS MEAN                          ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+☰  = Sidebar is visible. Click to HIDE it.
+›  = Sidebar is hidden. Click to SHOW it.
+
+The icon tells you what will happen when you click!

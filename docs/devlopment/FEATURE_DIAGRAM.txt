@@ -1,0 +1,85 @@
+═══════════════════════════════════════════════════════════════════
+  SIDEBAR HIDE/UNHIDE FEATURE - VISUAL GUIDE
+═══════════════════════════════════════════════════════════════════
+
+BEFORE (Sidebar Visible):
+┌─────────────────────────────────────────────────────────────────┐
+│ Menu Bar: File Edit View Run AI Git Window Help                │
+├─────────────────────────────────────────────────────────────────┤
+│ Top Toolbar: Project | Run | Git | AI | View | ... | Actions ▼ │
+├──┬──────────────────────────────────────────────┬───────────────┤
+│  │ 📁 EXPLORER               ‹  +  ⋯           │               │
+│  ├──────────────────────────────────────────────┤   Editor      │
+│A │ 📁 mycodingmaster                            │   Area        │
+│C │  ├─ 📁 ai                                    │               │
+│T │  ├─ 📁 ui                                    │               │
+│I │  │  ├─ editor_tabs.py                       │               │
+│V │  │  └─ main_window.py                       │               │
+│I │  └─ 📄 main.py                               │               │
+│T │                                               │               │
+│Y │                                               │               │
+│  │                                               │               │
+│B │                                               │               │
+│A │                                               │               │
+│R │                                               │               │
+└──┴──────────────────────────────────────────────┴───────────────┘
+       ↑
+   Click this ‹ button OR press Ctrl+B to hide!
+
+═══════════════════════════════════════════════════════════════════
+
+AFTER (Sidebar Hidden):
+┌─────────────────────────────────────────────────────────────────┐
+│ Menu Bar: File Edit View Run AI Git Window Help                │
+├─────────────────────────────────────────────────────────────────┤
+│ Top Toolbar: Project | Run | Git | View | Tools | ... | Acts ▼ │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                    Editor Area (Full Width)                     │
+│                                                                 │
+│   def toggle_sidebar(self):                                     │
+│       """Toggle sidebar - both ways work!"""                    │
+│       if self._sidebar_collapsed:                               │
+│           self._show_sidebar()                                  │
+│       else:                                                     │
+│           self._hide_sidebar()                                  │
+│                                                                 │
+│                                                                 │
+│                    More coding space! 🎉                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════
+
+KEYBOARD SHORTCUTS:
+
+┌──────────────────────┬─────────────────────────────────────────┐
+│ Ctrl+B               │ Toggle Explorer Sidebar                 │
+│ Alt+M                │ Toggle Menu Bar (hide File/Edit/etc)    │
+│ Alt+T                │ Toggle Top Toolbar (hide Project/Run)   │
+│ Ctrl+`               │ Toggle Terminal                         │
+│ Ctrl+\               │ Toggle AI Workspace (right side)        │
+└──────────────────────┴─────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════
+
+COLLAPSE BUTTON STATES:
+
+Expanded:  ‹  = "Hide me!" (click to collapse)
+Collapsed: ›  = "Show me!" (click to expand)
+
+The button is located in the Explorer header, right after the title
+and before the "+" and "⋯" buttons.
+
+═══════════════════════════════════════════════════════════════════
+
+FEATURES:
+✓ Click button in header to toggle
+✓ Use Ctrl+B keyboard shortcut
+✓ Use View menu → Toggle Explorer
+✓ All three methods work perfectly
+✓ Button icon changes based on state
+✓ No shortcut conflicts fixed!
+✓ Proper event tracking via event bus
+
+═══════════════════════════════════════════════════════════════════

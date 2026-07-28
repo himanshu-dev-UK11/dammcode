@@ -1,0 +1,16 @@
+{
+  "model_id": "deepseek-coder-v2:16b",
+  "provider": "ollama",
+  "display_name": "DeepSeek Coder V2 16B",
+  "context_window": 16384,
+  "max_output_tokens": 4096,
+  "type": "local",
+  "license": "DeepSeek License",
+  "cost_type": "free",
+  "priority": 14,
+  "version": "2.0",
+  "tags": ["coding", "code_generation", "powerful"],
+  "supports_streaming": true,
+  "supports_function_calling": true,
+  "supports_vision": false
+}

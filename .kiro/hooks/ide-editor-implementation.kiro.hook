@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Implement IDE Editor Upgrades",
+  "description": "Implementing professional IDE editor upgrades with all 11 features: breadcrumb navigation, minimap, line highlighting, indent guides, bracket matching, sticky tabs, unsaved indicators, tab operations, line numbers, split editor, and EventBus events",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": ""
+  }
+}

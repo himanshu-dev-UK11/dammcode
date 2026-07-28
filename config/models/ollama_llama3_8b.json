@@ -1,0 +1,16 @@
+{
+  "model_id": "llama3:8b",
+  "provider": "ollama",
+  "display_name": "Llama 3 8B",
+  "context_window": 8192,
+  "max_output_tokens": 2048,
+  "type": "local",
+  "license": "Llama 3 Community License",
+  "cost_type": "free",
+  "priority": 10,
+  "version": "3.0",
+  "tags": ["general", "chat", "fast"],
+  "supports_streaming": true,
+  "supports_function_calling": false,
+  "supports_vision": false
+}

@@ -1,0 +1,16 @@
+{
+    "provider_name": "groq",
+    "endpoint": "https://api.groq.com/openai/v1",
+    "auth_type": "api_key",
+    "api_key": "",
+    "enabled": false,
+    "priority": 7,
+    "default_model": "llama3-8b-8192",
+    "timeout_seconds": 30,
+    "retry_count": 3,
+    "supports_streaming": true,
+    "supports_tool_calling": true,
+    "supports_vision": false,
+    "supports_function_calling": false,
+    "connection_status": "uninitialized"
+}

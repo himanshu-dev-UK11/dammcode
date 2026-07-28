@@ -1,0 +1,16 @@
+{
+  "model_id": "starcoder2:15b",
+  "provider": "ollama",
+  "display_name": "StarCoder2 15B",
+  "context_window": 16384,
+  "max_output_tokens": 4096,
+  "type": "local",
+  "license": "BigCode OpenRAIL-M",
+  "cost_type": "free",
+  "priority": 13,
+  "version": "2.0",
+  "tags": ["coding", "code_completion", "multilingual"],
+  "supports_streaming": true,
+  "supports_function_calling": false,
+  "supports_vision": false
+}

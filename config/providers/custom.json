@@ -1,0 +1,16 @@
+{
+    "provider_name": "custom",
+    "endpoint": "http://localhost:8000/v1",
+    "auth_type": "api_key",
+    "api_key": "",
+    "enabled": false,
+    "priority": 1,
+    "default_model": "",
+    "timeout_seconds": 30,
+    "retry_count": 3,
+    "supports_streaming": true,
+    "supports_tool_calling": false,
+    "supports_vision": false,
+    "supports_function_calling": false,
+    "connection_status": "uninitialized"
+}

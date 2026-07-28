@@ -1,0 +1,421 @@
+{
+  "total_startup_time_ms": 40164.17049999996,
+  "total_phases": 33,
+  "bottlenecks_count": 13,
+  "bottlenecks": [
+    {
+      "name": "total_startup",
+      "duration_ms": 40160.49,
+      "parent": null,
+      "thread": "UI"
+    },
+    {
+      "name": "mainwindow_creation",
+      "duration_ms": 874.36,
+      "parent": "total_startup",
+      "thread": "UI"
+    },
+    {
+      "name": "mainwindow_init",
+      "duration_ms": 874.36,
+      "parent": "mainwindow_creation",
+      "thread": "UI"
+    },
+    {
+      "name": "setup_ui",
+      "duration_ms": 646.5,
+      "parent": "mainwindow_init",
+      "thread": "UI"
+    },
+    {
+      "name": "command_palette_init",
+      "duration_ms": 222.35,
+      "parent": "mainwindow_init",
+      "thread": "UI"
+    },
+    {
+      "name": "load_layout",
+      "duration_ms": 175.19,
+      "parent": "setup_ui",
+      "thread": "UI"
+    },
+    {
+      "name": "ai_panel_init",
+      "duration_ms": 134.87,
+      "parent": "setup_ui",
+      "thread": "UI"
+    },
+    {
+      "name": "bottom_panel_init",
+      "duration_ms": 114.76,
+      "parent": "setup_ui",
+      "thread": "UI"
+    },
+    {
+      "name": "center_panel_init",
+      "duration_ms": 104.84,
+      "parent": "setup_ui",
+      "thread": "UI"
+    },
+    {
+      "name": "set_central_widget",
+      "duration_ms": 55.19,
+      "parent": "setup_ui",
+      "thread": "UI"
+    },
+    {
+      "name": "qapplication_init",
+      "duration_ms": 39.84,
+      "parent": "total_startup",
+      "thread": "UI"
+    },
+    {
+      "name": "explorer_init",
+      "duration_ms": 37.44,
+      "parent": "setup_ui",
+      "thread": "UI"
+    },
+    {
+      "name": "window_show",
+      "duration_ms": 23.36,
+      "parent": "total_startup",
+      "thread": "UI"
+    }
+  ],
+  "phases": [
+    {
+      "name": "total_startup",
+      "duration_ms": 40160.49,
+      "start_offset_ms": 0.01,
+      "parent": null,
+      "children": [
+        "validate_startup",
+        "minimal_core_init",
+        "qapplication_init",
+        "design_system_init",
+        "mainwindow_creation",
+        "window_show"
+      ],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "validate_startup",
+      "duration_ms": 1.2,
+      "start_offset_ms": 0.31,
+      "parent": "total_startup",
+      "children": [
+        "create_directories",
+        "validate_configs"
+      ],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "create_directories",
+      "duration_ms": 0.33,
+      "start_offset_ms": 0.38,
+      "parent": "validate_startup",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "validate_configs",
+      "duration_ms": 0.69,
+      "start_offset_ms": 0.72,
+      "parent": "validate_startup",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "minimal_core_init",
+      "duration_ms": 2.52,
+      "start_offset_ms": 1.52,
+      "parent": "total_startup",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "qapplication_init",
+      "duration_ms": 39.84,
+      "start_offset_ms": 4.04,
+      "parent": "total_startup",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "design_system_init",
+      "duration_ms": 0.21,
+      "start_offset_ms": 43.89,
+      "parent": "total_startup",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "mainwindow_creation",
+      "duration_ms": 874.36,
+      "start_offset_ms": 44.1,
+      "parent": "total_startup",
+      "children": [
+        "mainwindow_init"
+      ],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "mainwindow_init",
+      "duration_ms": 874.36,
+      "start_offset_ms": 44.11,
+      "parent": "mainwindow_creation",
+      "children": [
+        "command_palette_init",
+        "notification_manager_init",
+        "load_sidebar_settings",
+        "setup_menu_bar",
+        "setup_ui",
+        "setup_shortcuts",
+        "setup_connections",
+        "subscribe_events"
+      ],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "command_palette_init",
+      "duration_ms": 222.35,
+      "start_offset_ms": 45.0,
+      "parent": "mainwindow_init",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "notification_manager_init",
+      "duration_ms": 0.84,
+      "start_offset_ms": 267.35,
+      "parent": "mainwindow_init",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "load_sidebar_settings",
+      "duration_ms": 0.44,
+      "start_offset_ms": 268.2,
+      "parent": "mainwindow_init",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "setup_menu_bar",
+      "duration_ms": 2.85,
+      "start_offset_ms": 268.65,
+      "parent": "mainwindow_init",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "setup_ui",
+      "duration_ms": 646.5,
+      "start_offset_ms": 271.5,
+      "parent": "mainwindow_init",
+      "children": [
+        "toolbar_init",
+        "design_system_load",
+        "main_layout_setup",
+        "activity_bar_init",
+        "splitter_init",
+        "explorer_init",
+        "center_panel_init",
+        "ai_panel_init",
+        "bottom_panel_init",
+        "set_central_widget",
+        "splitter_state_handlers",
+        "status_bar_init",
+        "wire_components",
+        "load_layout",
+        "apply_sidebar_state"
+      ],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "toolbar_init",
+      "duration_ms": 11.23,
+      "start_offset_ms": 271.51,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "design_system_load",
+      "duration_ms": 0.03,
+      "start_offset_ms": 282.75,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "main_layout_setup",
+      "duration_ms": 0.05,
+      "start_offset_ms": 282.79,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "activity_bar_init",
+      "duration_ms": 1.51,
+      "start_offset_ms": 282.84,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "splitter_init",
+      "duration_ms": 0.24,
+      "start_offset_ms": 284.36,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "explorer_init",
+      "duration_ms": 37.44,
+      "start_offset_ms": 284.6,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "center_panel_init",
+      "duration_ms": 104.84,
+      "start_offset_ms": 322.05,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "ai_panel_init",
+      "duration_ms": 134.87,
+      "start_offset_ms": 426.9,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "bottom_panel_init",
+      "duration_ms": 114.76,
+      "start_offset_ms": 561.78,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "set_central_widget",
+      "duration_ms": 55.19,
+      "start_offset_ms": 676.55,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "splitter_state_handlers",
+      "duration_ms": 0.06,
+      "start_offset_ms": 731.75,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "status_bar_init",
+      "duration_ms": 6.65,
+      "start_offset_ms": 731.81,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "wire_components",
+      "duration_ms": 4.28,
+      "start_offset_ms": 738.47,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "load_layout",
+      "duration_ms": 175.19,
+      "start_offset_ms": 742.76,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": true
+    },
+    {
+      "name": "apply_sidebar_state",
+      "duration_ms": 0.05,
+      "start_offset_ms": 917.96,
+      "parent": "setup_ui",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "setup_shortcuts",
+      "duration_ms": 0.21,
+      "start_offset_ms": 918.01,
+      "parent": "mainwindow_init",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "setup_connections",
+      "duration_ms": 0.05,
+      "start_offset_ms": 918.22,
+      "parent": "mainwindow_init",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "subscribe_events",
+      "duration_ms": 0.04,
+      "start_offset_ms": 918.42,
+      "parent": "mainwindow_init",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": false
+    },
+    {
+      "name": "window_show",
+      "duration_ms": 23.36,
+      "start_offset_ms": 918.47,
+      "parent": "total_startup",
+      "children": [],
+      "thread": "UI",
+      "exceeds_threshold": true
+    }
+  ]
+}

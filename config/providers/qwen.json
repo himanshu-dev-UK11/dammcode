@@ -1,0 +1,14 @@
+{
+  "provider_name": "qwen",
+  "endpoint": "http://localhost:11434",
+  "auth_type": "none",
+  "enabled": true,
+  "priority": 15,
+  "default_model": "qwen2.5-coder:7b",
+  "timeout_seconds": 120,
+  "retry_count": 3,
+  "supports_streaming": true,
+  "supports_tool_calling": false,
+  "supports_vision": false,
+  "supports_function_calling": true
+}
