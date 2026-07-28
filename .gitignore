@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment files
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Build
+dist/
+build/
+
+# Temporary
+temp/
+
+# AI backups
+.ai_backups/
+
+# Debug folder
+.dbg/
