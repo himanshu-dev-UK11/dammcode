@@ -412,303 +412,523 @@ class PremiumSidebarHeader(QWidget):
 
 class PremiumFileTree(QTreeView):
     """Premium file tree with professional styling and performance."""
-    
     file_opened = Signal(str)
     file_selected = Signal(str)
     directory_selected = Signal(str)
-    
+    selection_changed = Signal(list)
+
     def __init__(self, event_bus, parent=None):
         super().__init__(parent)
         self.event_bus = event_bus
         self.file_ops = FileOperations(event_bus, parent=self)
         self.copy_path_manager = CopyPathManager(event_bus)
-        
-        # Initialize model
-        self.model = QFileSystemModel()
-        self.model.setRootPath("")
-        self.model.setFilter(
-            QDir.Filter.AllDirs |
-            QDir.Filter.Files |
-            QDir.Filter.NoDotAndDotDot
-        )
-        self.model.setNameFilterDisables(False)
-        
-        self.setModel(self.model)
+        self._root_path: Optional[Path] = None
+        self._clipboard_paths: list[Path] = []
+        self._clipboard_cut = False
+        self._expanded_paths: set[str] = set()
+
+        self._source_model = QFileSystemModel(self)
+        self._source_model.setRootPath("")
+        self._source_model.setFilter(QDir.Filter.AllDirs | QDir.Filter.Files | QDir.Filter.NoDotAndDotDot)
+        self._source_model.setNameFilterDisables(False)
+
+        self._proxy_model = ExplorerFilterProxyModel(self)
+        self._proxy_model.setSourceModel(self._source_model)
+
+        self.setModel(self._proxy_model)
         self.setHeaderHidden(True)
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
-        self.setIndentation(16)  # Professional indentation
+        self.setIndentation(18)
         self.setAnimated(False)
         self.setUniformRowHeights(True)
-        
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.setDragEnabled(True)
+        self.setAcceptDrops(True)
+        self.setDropIndicatorShown(True)
+        self.setDragDropMode(QAbstractItemView.DragDrop)
+        self.setDefaultDropAction(Qt.MoveAction)
+        self.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        self._file_watcher = FileWatcher(event_bus)
+        self._file_watcher.file_modified.connect(self._schedule_refresh)
+        self._file_watcher.file_deleted.connect(self._schedule_refresh)
+        self._file_watcher.directory_created.connect(self._schedule_refresh)
+        self._file_watcher.directory_deleted.connect(self._schedule_refresh)
+        self.event_bus.subscribe("directory_changed", self._schedule_refresh)
+        self.event_bus.subscribe("file_changed_externally", self._schedule_refresh)
+        self.event_bus.subscribe("file_deleted_externally", self._schedule_refresh)
+
+        self._refresh_timer = QTimer(self)
+        self._refresh_timer.setSingleShot(True)
+        self._refresh_timer.setInterval(120)
+        self._refresh_timer.timeout.connect(self._refresh_model)
+
         self._setup_styling()
         self._setup_connections()
-        self._setup_context_menu()
-        
+
     def _setup_styling(self):
         p = get_design_system().palette
-        
+
         self.setStyleSheet(f"""
             QTreeView {{
                 background-color: transparent;
                 border: none;
                 font-size: {FontSize.SM}px;
                 outline: none;
-                selection-background-color: {p.selection};
+                selection-background-color: transparent;
                 selection-color: {p.text};
             }}
-            
+
             QTreeView::item {{
                 padding: 4px {Spacing.SM}px;
                 min-height: 24px;
                 border-radius: {Radius.SM}px;
-                margin: 1px 8px;
+                margin: 1px 6px;
             }}
-            
+
             QTreeView::item:hover {{
                 background-color: {p.surface_hover};
             }}
-            
+
             QTreeView::item:selected {{
                 background-color: {p.surface_active};
                 color: {p.text};
             }}
-            
+
             QTreeView::item:selected:!active {{
                 background-color: {p.selection_inactive};
             }}
-            
+
             QTreeView::branch {{
                 background-color: transparent;
             }}
-            
-            QTreeView::branch:has-siblings:adjoining-sibling {{
-                border-image: none;
-            }}
-            
-            QTreeView::branch:has-siblings:!adjoining-sibling {{
-                border-image: none;
-            }}
-            
-            QTreeView::branch:closed:has-children:has-siblings {{
-                border-image: none;
-            }}
-            
-            QTreeView::branch:open:has-children:has-siblings {{
-                border-image: none;
-            }}
-            
-            /* Modern scrollbar */
+
             QScrollBar:vertical {{
                 background-color: transparent;
                 width: 8px;
                 margin: 0;
             }}
-            
+
             QScrollBar::handle:vertical {{
                 background-color: {p.border};
                 border-radius: 4px;
                 min-height: 28px;
                 margin: 2px 1px;
             }}
-            
+
             QScrollBar::handle:vertical:hover {{
                 background-color: {p.border_hover};
             }}
-            
+
             QScrollBar::add-line:vertical,
             QScrollBar::sub-line:vertical {{
                 height: 0;
             }}
-            
+
             QScrollBar:horizontal {{
                 background-color: transparent;
                 height: 8px;
                 margin: 0;
             }}
-            
+
             QScrollBar::handle:horizontal {{
                 background-color: {p.border};
                 border-radius: 4px;
                 min-width: 28px;
                 margin: 1px 2px;
             }}
-            
+
             QScrollBar::handle:horizontal:hover {{
                 background-color: {p.border_hover};
             }}
-            
+
             QScrollBar::add-line:horizontal,
             QScrollBar::sub-line:horizontal {{
                 width: 0;
             }}
         """)
-        
-        # Hide all columns except name
-        for i in range(1, self.model.columnCount()):
+
+        for i in range(1, self._source_model.columnCount()):
             self.hideColumn(i)
-            
+
     def _setup_connections(self):
-        """Setup signal connections."""
         self.doubleClicked.connect(self._on_double_clicked)
         self.clicked.connect(self._on_clicked)
-        
-        # Custom context menu
+        self.expanded.connect(self._on_expanded)
+        self.collapsed.connect(self._on_collapsed)
+
+        if self.selectionModel() is not None:
+            self.selectionModel().selectionChanged.connect(self._on_selection_changed)
+
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
-        
-    def _setup_context_menu(self):
-        """Setup context menu."""
-        self._context_menu = QMenu(self)
-        
-        # File operations
-        self._action_open = QAction("📂 Open", self)
-        self._action_open.triggered.connect(self._on_open_file)
-        self._context_menu.addAction(self._action_open)
-        
-        self._action_open_with = QAction("📂 Open With...", self)
-        self._action_open_with.triggered.connect(self._on_open_with)
-        self._context_menu.addAction(self._action_open_with)
-        
-        self._context_menu.addSeparator()
-        
-        # File operations
-        self._action_rename = QAction("✏️ Rename", self)
-        self._action_rename.triggered.connect(self._on_rename)
-        self._context_menu.addAction(self._action_rename)
-        
-        self._action_duplicate = QAction("📋 Duplicate", self)
-        self._action_duplicate.triggered.connect(self._on_duplicate)
-        self._context_menu.addAction(self._action_duplicate)
-        
-        self._context_menu.addSeparator()
-        
-        self._action_delete = QAction("🗑️ Delete", self)
-        self._action_delete.triggered.connect(self._on_delete)
-        self._context_menu.addAction(self._action_delete)
-        
-        self._context_menu.addSeparator()
-        
-        # Copy path
-        copy_menu = self._context_menu.addMenu("📋 Copy Path")
-        self.copy_path_manager.create_copy_menu(None, copy_menu)
-        
-        self._context_menu.addSeparator()
-        
-        # Reveal
-        self._action_reveal = QAction("📂 Reveal in Explorer", self)
-        self._action_reveal.triggered.connect(self._on_reveal)
-        self._context_menu.addAction(self._action_reveal)
-        
-        self._context_menu.addSeparator()
-        
-        # New file/folder
-        self._action_new_file = QAction("📄 New File", self)
-        self._action_new_file.triggered.connect(self._on_new_file)
-        self._context_menu.addAction(self._action_new_file)
-        
-        self._action_new_folder = QAction("📁 New Folder", self)
-        self._action_new_folder.triggered.connect(self._on_new_folder)
-        self._context_menu.addAction(self._action_new_folder)
-        
-        self._context_menu.addSeparator()
-        
-        self._action_properties = QAction("📋 Properties", self)
-        self._action_properties.triggered.connect(self._on_properties)
-        self._context_menu.addAction(self._action_properties)
-        
+
     def set_root_path(self, path: str):
-        """Set the root path of the tree."""
-        self.root_path = path
-        index = self.model.setRootPath(path)
-        self.setRootIndex(index)
-        
-    def _get_current_path(self) -> str:
-        """Get currently selected path."""
-        index = self.currentIndex()
-        if index.isValid():
-            return self.model.filePath(index)
-        return self.root_path or ""
-        
+        self._root_path = Path(path)
+        self.copy_path_manager.set_workspace_root(self._root_path)
+        self._expanded_paths = {str(self._root_path.resolve())}
+        self._source_model.setRootPath(path)
+        self._refresh_model()
+
+        source_index = self._source_model.index(path)
+        proxy_index = self._proxy_model.mapFromSource(source_index)
+        if proxy_index.isValid():
+            self.setRootIndex(proxy_index)
+            self.expand(proxy_index)
+
+    def set_search_query(self, query: str):
+        self._proxy_model.set_query(query)
+
+    def _map_to_source(self, index: QModelIndex) -> QModelIndex:
+        if not index.isValid():
+            return QModelIndex()
+        return self._proxy_model.mapToSource(index)
+
+    def _path_for_index(self, index: QModelIndex) -> Optional[Path]:
+        source_index = self._map_to_source(index)
+        if source_index.isValid():
+            return Path(self._source_model.filePath(source_index))
+        return None
+
+    def _selected_paths(self) -> list[Path]:
+        paths: list[Path] = []
+        for proxy_index in self.selectedIndexes():
+            if proxy_index.column() != 0:
+                continue
+            path = self._path_for_index(proxy_index)
+            if path and path not in paths:
+                paths.append(path)
+        return paths
+
+    def _single_current_path(self) -> Optional[Path]:
+        selected = self._selected_paths()
+        if selected:
+            return selected[0]
+        return self._path_for_index(self.currentIndex())
+
+    def _current_target_directory(self) -> Optional[Path]:
+        path = self._single_current_path()
+        if path is None:
+            return self._root_path
+        return path if path.is_dir() else path.parent
+
     def _on_double_clicked(self, index):
-        """Handle double-click."""
-        path = self.model.filePath(index)
-        if Path(path).exists():
-            if Path(path).is_file():
-                self.file_opened.emit(path)
-            else:
-                self.directory_selected.emit(path)
-                
+        path = self._path_for_index(index)
+        if not path or not path.exists():
+            return
+        if path.is_file():
+            self.file_opened.emit(str(path))
+        else:
+            self.directory_selected.emit(str(path))
+
     def _on_clicked(self, index):
-        """Handle single-click."""
-        path = self.model.filePath(index)
-        if Path(path).is_file():
-            self.file_selected.emit(path)
-            
+        path = self._path_for_index(index)
+        if not path or not path.exists():
+            return
+        if path.is_file():
+            self.file_selected.emit(str(path))
+        else:
+            self.directory_selected.emit(str(path))
+
+    def _on_selection_changed(self, *_):
+        self.selection_changed.emit([str(path) for path in self._selected_paths()])
+
+    def _on_expanded(self, index):
+        path = self._path_for_index(index)
+        if path and path.is_dir():
+            resolved = str(path.resolve())
+            if resolved not in self._expanded_paths:
+                self._expanded_paths.add(resolved)
+                self._file_watcher.watch_directory(path)
+
+    def _on_collapsed(self, index):
+        path = self._path_for_index(index)
+        if path and path.is_dir():
+            self._expanded_paths.discard(str(path.resolve()))
+
+    def _schedule_refresh(self, *_):
+        if not self._refresh_timer.isActive():
+            self._refresh_timer.start()
+
+    def _refresh_model(self):
+        if not self._root_path or not self._root_path.exists():
+            return
+
+        self._source_model.setRootPath(str(self._root_path))
+        self._file_watcher.clear_all()
+        self._file_watcher.watch_directory(self._root_path)
+
+        for path_str in list(self._expanded_paths):
+            path = Path(path_str)
+            if path.exists() and path.is_dir():
+                self._file_watcher.watch_directory(path)
+
     def _show_context_menu(self, pos):
-        """Show context menu."""
-        path = self._get_current_path()
-        
-        # Update menu actions based on path
-        is_dir = Path(path).is_dir() if Path(path).exists() else True
-        is_file = Path(path).is_file() if Path(path).exists() else False
-        
-        # Show menu
-        self._context_menu.exec_(self.viewport().mapToGlobal(pos))
-        
-    def _on_open_file(self):
-        """Open selected file."""
-        path = self._get_current_path()
-        if Path(path).exists() and Path(path).is_file():
-            self.file_opened.emit(path)
-            
-    def _on_open_with(self):
-        """Open file with specific application."""
-        path = self._get_current_path()
-        if Path(path).exists() and Path(path).is_file():
-            self.event_bus.publish("file_open_with_requested", {"path": path})
-            
-    def _on_rename(self):
-        """Rename file/folder."""
-        path = self._get_current_path()
-        if Path(path).exists():
-            self.file_ops.rename(path)
-            
-    def _on_duplicate(self):
-        """Duplicate file/folder."""
-        path = self._get_current_path()
-        if Path(path).exists():
-            self.file_ops.duplicate(path)
-            
-    def _on_delete(self):
-        """Delete file/folder."""
-        path = self._get_current_path()
-        if Path(path).exists():
-            self.file_ops.delete(path)
-            
-    def _on_reveal(self):
-        """Reveal in explorer."""
-        path = self._get_current_path()
-        if Path(path).exists():
-            self.file_ops.reveal_in_explorer(path)
-            
-    def _on_new_file(self):
-        """Create new file."""
-        path = self._get_current_path()
-        if Path(path).exists() and Path(path).is_dir():
-            self.file_ops.create_file(Path(path))
-            
-    def _on_new_folder(self):
-        """Create new folder."""
-        path = self._get_current_path()
-        if Path(path).exists() and Path(path).is_dir():
-            self.file_ops.create_folder(Path(path))
-            
-    def _on_properties(self):
-        """Show properties."""
-        path = self._get_current_path()
-        if Path(path).exists():
-            self.event_bus.publish("properties_shown", {"path": path})
+        index = self.indexAt(pos)
+        if index.isValid() and not any(sel == index for sel in self.selectedIndexes()):
+            self.setCurrentIndex(index)
+            self.selectionModel().select(index, self.selectionModel().ClearAndSelect | self.selectionModel().Rows)
+
+        paths = self._selected_paths()
+        if not paths:
+            if self._root_path:
+                paths = [self._root_path]
+            else:
+                return
+
+        current_path = paths[0]
+        menu = QMenu(self)
+        single_selection = len(paths) == 1
+        all_dirs = all(path.is_dir() for path in paths)
+
+        if single_selection and current_path.exists():
+            if current_path.is_file():
+                open_action = QAction("Open", menu)
+                open_action.triggered.connect(lambda: self._open_path(current_path))
+                menu.addAction(open_action)
+
+                open_containing = QAction("Open Containing Folder", menu)
+                open_containing.triggered.connect(lambda: self.file_ops.reveal_in_explorer(current_path))
+                menu.addAction(open_containing)
+
+                menu.addSeparator()
+
+            rename_action = QAction("Rename", menu)
+            rename_action.triggered.connect(lambda: self._rename_path(current_path))
+            menu.addAction(rename_action)
+
+            duplicate_action = QAction("Duplicate", menu)
+            duplicate_action.triggered.connect(lambda: self._duplicate_paths([current_path]))
+            menu.addAction(duplicate_action)
+
+            menu.addSeparator()
+
+        if len(paths) > 1:
+            duplicate_action = QAction("Duplicate Selection", menu)
+            duplicate_action.triggered.connect(lambda: self._duplicate_paths(paths))
+            menu.addAction(duplicate_action)
+            menu.addSeparator()
+
+        delete_action = QAction("Delete", menu)
+        delete_action.triggered.connect(lambda: self._delete_paths(paths))
+        menu.addAction(delete_action)
+
+        menu.addSeparator()
+
+        copy_menu = menu.addMenu("Copy Path")
+        for label, fmt in (("Absolute Path", "absolute"), ("Relative Path", "relative"), ("File Name", "name"), ("Extension", "extension")):
+            action = QAction(label, copy_menu)
+            action.triggered.connect(lambda checked=False, f=fmt, p=current_path: self.copy_path_manager.copy_path(p, f))
+            copy_menu.addAction(action)
+
+        copy_action = QAction("Copy", menu)
+        copy_action.triggered.connect(lambda: self._copy_paths(paths))
+        menu.addAction(copy_action)
+
+        paste_action = QAction("Paste", menu)
+        paste_action.triggered.connect(lambda: self._paste_to(current_path if current_path.is_dir() else current_path.parent))
+        paste_action.setEnabled(bool(self._clipboard_paths))
+        menu.addAction(paste_action)
+
+        menu.addSeparator()
+
+        reveal_action = QAction("Reveal in Explorer", menu)
+        reveal_action.triggered.connect(lambda: self.file_ops.reveal_in_explorer(current_path))
+        menu.addAction(reveal_action)
+
+        if all_dirs:
+            new_file_action = QAction("New File", menu)
+            new_file_action.triggered.connect(lambda: self._create_file(current_path))
+            menu.addAction(new_file_action)
+
+            new_folder_action = QAction("New Folder", menu)
+            new_folder_action.triggered.connect(lambda: self._create_folder(current_path))
+            menu.addAction(new_folder_action)
+
+        menu.addSeparator()
+
+        refresh_action = QAction("Refresh", menu)
+        refresh_action.triggered.connect(self._refresh_model)
+        menu.addAction(refresh_action)
+
+        menu.exec(self.viewport().mapToGlobal(pos))
+
+    def _open_path(self, path: Path):
+        if path.is_file():
+            self.file_opened.emit(str(path))
+        elif path.is_dir():
+            source_index = self._source_model.index(str(path))
+            proxy_index = self._proxy_model.mapFromSource(source_index)
+            if proxy_index.isValid():
+                self.expand(proxy_index)
+                self.setCurrentIndex(proxy_index)
+
+    def _rename_path(self, path: Path):
+        if not path.exists():
+            return
+
+        new_name, ok = QInputDialog.getText(self, "Rename", f"Rename '{path.name}' to:", text=path.name)
+        if ok and new_name and new_name != path.name:
+            self.file_ops.rename(path, new_name)
+            self._schedule_refresh()
+
+    def _duplicate_paths(self, paths: list[Path]):
+        for path in paths:
+            if path.exists():
+                self.file_ops.duplicate(path)
+        self._schedule_refresh()
+
+    def _delete_paths(self, paths: list[Path]):
+        for path in paths:
+            if path.exists():
+                self.file_ops.delete(path)
+        self._schedule_refresh()
+
+    def _copy_paths(self, paths: list[Path]):
+        self._clipboard_paths = [path for path in paths if path.exists()]
+        self._clipboard_cut = False
+        QApplication.clipboard().setText("\n".join(str(path) for path in self._clipboard_paths))
+
+    def _cut_paths(self, paths: list[Path]):
+        self._clipboard_paths = [path for path in paths if path.exists()]
+        self._clipboard_cut = True
+        QApplication.clipboard().setText("\n".join(str(path) for path in self._clipboard_paths))
+
+    def _paste_to(self, target_dir: Path):
+        if not target_dir or not target_dir.exists() or not target_dir.is_dir():
+            return
+
+        for source in list(self._clipboard_paths):
+            if not source.exists():
+                continue
+            destination = target_dir / source.name
+            if self._clipboard_cut:
+                self.file_ops.move(source, destination)
+            else:
+                self.file_ops.copy(source, destination)
+
+        if self._clipboard_cut:
+            self._clipboard_paths = []
+            self._clipboard_cut = False
+
+        self._schedule_refresh()
+
+    def _create_file(self, parent_dir: Path):
+        result = self.file_ops.create_file(parent_dir)
+        if result:
+            self._schedule_refresh()
+
+    def _create_folder(self, parent_dir: Path):
+        result = self.file_ops.create_folder(parent_dir)
+        if result:
+            self._schedule_refresh()
+
+    def _open_selected(self):
+        path = self._single_current_path()
+        if path and path.exists():
+            self._open_path(path)
+
+    def _rename_selected(self):
+        path = self._single_current_path()
+        if path and path.exists():
+            self._rename_path(path)
+
+    def _delete_selected(self):
+        self._delete_paths(self._selected_paths())
+
+    def _duplicate_selected(self):
+        self._duplicate_paths(self._selected_paths())
+
+    def _copy_selected(self):
+        self._copy_paths(self._selected_paths())
+
+    def _cut_selected(self):
+        self._cut_paths(self._selected_paths())
+
+    def _paste_selected(self):
+        target = self._current_target_directory()
+        if target:
+            self._paste_to(target)
+
+    def keyPressEvent(self, event):
+        if event.matches(QKeySequence.Copy):
+            self._copy_selected()
+            event.accept()
+            return
+        if event.matches(QKeySequence.Cut):
+            self._cut_selected()
+            event.accept()
+            return
+        if event.matches(QKeySequence.Paste):
+            self._paste_selected()
+            event.accept()
+            return
+        if event.key() == Qt.Key_Delete:
+            self._delete_selected()
+            event.accept()
+            return
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            self._open_selected()
+            event.accept()
+            return
+        if event.key() == Qt.Key_F2:
+            self._rename_selected()
+            event.accept()
+            return
+        if event.key() == Qt.Key_D and event.modifiers() & Qt.ControlModifier:
+            self._duplicate_selected()
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+    def dragEnterEvent(self, event):
+        if event.source() is self and self._selected_paths():
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event):
+        if event.source() is self and self._selected_paths():
+            event.acceptProposedAction()
+        else:
+            super().dragMoveEvent(event)
+
+    def startDrag(self, supportedActions):
+        super().startDrag(supportedActions)
+
+    def dropEvent(self, event):
+        target_index = self.indexAt(event.position().toPoint())
+        target_path = self._path_for_index(target_index)
+        if target_path and target_path.is_file():
+            target_path = target_path.parent
+        elif not target_path:
+            target_path = self._root_path
+
+        if not target_path or not target_path.exists():
+            super().dropEvent(event)
+            return
+
+        source_paths = self._selected_paths()
+        if not source_paths:
+            super().dropEvent(event)
+            return
+
+        is_copy = bool(event.keyboardModifiers() & Qt.ControlModifier) or not self._clipboard_cut
+        for source in source_paths:
+            if source == target_path or target_path in source.parents:
+                continue
+            destination = target_path / source.name
+            if is_copy:
+                self.file_ops.copy(source, destination)
+            else:
+                self.file_ops.move(source, destination)
+
+        self._clipboard_paths = []
+        self._clipboard_cut = False
+        self._schedule_refresh()
+        event.acceptProposedAction()
 
 
 class PremiumExplorer(QWidget):
