@@ -1166,6 +1166,10 @@ class PremiumExplorer(QWidget):
     def _on_recent_project_selected(self, path: str):
         """Handle recent project selection - open it."""
         self.event_bus.publish("request_open_workspace", {"path": path})
+
+    def _on_search_changed(self, query: str, options: dict):
+        """Filter the live Explorer tree without affecting workspace indexing."""
+        self.tree.set_search_query(query)
         
     def set_root_path(self, path: str):
         """Set the root path."""
