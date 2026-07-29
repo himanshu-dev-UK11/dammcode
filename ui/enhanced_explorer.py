@@ -424,6 +424,7 @@ class PremiumFileTree(QTreeView):
         self.file_ops = FileOperations(event_bus, parent=self)
         self.copy_path_manager = CopyPathManager(event_bus)
         self._root_path: Optional[Path] = None
+        self._workspace_roots: list[Path] = []
         self._clipboard_paths: list[Path] = []
         self._clipboard_cut = False
         self._expanded_paths: set[str] = set()
@@ -567,17 +568,28 @@ class PremiumFileTree(QTreeView):
         self.customContextMenuRequested.connect(self._show_context_menu)
 
     def set_root_path(self, path: str):
-        self._root_path = Path(path)
+        self.set_workspace_roots([path])
+
+    def set_workspace_roots(self, paths: list[str]):
+        self._workspace_roots = [Path(path) for path in paths if path]
+        if not self._workspace_roots:
+            return
+
+        self._root_path = self._workspace_roots[0]
         self.copy_path_manager.set_workspace_root(self._root_path)
-        self._expanded_paths = {str(self._root_path.resolve())}
-        self._source_model.setRootPath(path)
+        self._expanded_paths = {str(root.resolve()) for root in self._workspace_roots}
+        self._source_model.setRootPath(str(self._root_path))
         self._refresh_model()
 
-        source_index = self._source_model.index(path)
+        source_index = self._source_model.index(str(self._root_path))
         proxy_index = self._proxy_model.mapFromSource(source_index)
         if proxy_index.isValid():
             self.setRootIndex(proxy_index)
             self.expand(proxy_index)
+
+        for root in self._workspace_roots[1:]:
+            if root.exists() and root.is_dir():
+                self._file_watcher.watch_directory(root)
 
     def set_search_query(self, query: str):
         self._proxy_model.set_query(query)
