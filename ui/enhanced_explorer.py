@@ -28,6 +28,7 @@ from ui.explorer.copy_path import CopyPathManager
 from core.file_watcher import FileWatcher
 from core.logger import setup_logger
 from ui.explorer.file_icons import get_file_icon
+from ui.explorer.search import SearchBox
 
 
 logger = setup_logger(__name__)
