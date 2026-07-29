@@ -1191,6 +1191,10 @@ class PremiumExplorer(QWidget):
     def set_root_path(self, path: str):
         """Set the root path."""
         self.tree.set_root_path(path)
+
+    def set_workspace_roots(self, paths: list[str]):
+        """Set one or more workspace roots."""
+        self.tree.set_workspace_roots(paths)
         
     def set_header_title(self, title: str):
         """Update header title."""
