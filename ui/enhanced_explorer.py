@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QToolButton, QSplitter, QFrame, QPushButton,
     QTreeView, QFileSystemModel, QMenu, QAbstractItemView, QInputDialog, QApplication
 )
-from PySide6.QtCore import Qt, Signal, QSize, QDir, QMimeData, QPropertyAnimation, QPoint, QEvent, QTimer, QSortFilterProxyModel, QModelIndex
+from PySide6.QtCore import Qt, Signal, QSize, QDir, QMimeData, QPropertyAnimation, QPoint, QEvent, QTimer, QSortFilterProxyModel, QModelIndex, QItemSelectionModel
 from PySide6.QtGui import QAction, QCursor, QMouseEvent, QKeySequence
 from pathlib import Path
 from typing import Optional
@@ -682,7 +682,7 @@ class PremiumFileTree(QTreeView):
         index = self.indexAt(pos)
         if index.isValid() and not any(sel == index for sel in self.selectedIndexes()):
             self.setCurrentIndex(index)
-            self.selectionModel().select(index, self.selectionModel().ClearAndSelect | self.selectionModel().Rows)
+            self.selectionModel().select(index, QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows)
 
         paths = self._selected_paths()
         if not paths:
