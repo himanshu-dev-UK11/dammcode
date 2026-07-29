@@ -1165,14 +1165,19 @@ class PremiumExplorer(QWidget):
         self._has_workspace = True
         self._content_stack.setCurrentWidget(self.tree)
         
-        # Set root path if provided
-        path = data.get("path", "")
-        if path:
-            self.set_root_path(path)
+        # Set root path(s) if provided
+        roots = data.get("roots")
+        if isinstance(roots, list) and roots:
+            self.set_workspace_roots(roots)
+        else:
+            path = data.get("path", "")
+            if path:
+                self.set_root_path(path)
     
     def _on_workspace_closed(self, data: dict):
         """Handle workspace closed - switch to welcome screen."""
         self._has_workspace = False
+        self.tree.set_search_query("")
         self._content_stack.setCurrentWidget(self.welcome_screen)
     
     def _on_recent_project_selected(self, path: str):
