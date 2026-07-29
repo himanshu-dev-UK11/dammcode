@@ -321,13 +321,13 @@ class MainWindow(QMainWindow):
             with ProfilePhase("splitter_init"):
                 self._workspace_splitter = QSplitter(Qt.Vertical)
                 self._workspace_splitter.setObjectName("MainWorkspaceSplitter")
-                self._workspace_splitter.setChildrenCollapsible(True)
+                self._workspace_splitter.setChildrenCollapsible(False)  # Don't allow collapsing to 0
                 self._workspace_splitter.setOpaqueResize(True)
                 self._workspace_splitter.setHandleWidth(6)  # Make handle visible
 
                 self._top_splitter = QSplitter(Qt.Horizontal)
                 self._top_splitter.setObjectName("TopWorkspaceSplitter")
-                self._top_splitter.setChildrenCollapsible(True)
+                self._top_splitter.setChildrenCollapsible(False)  # Don't allow collapsing to 0
                 self._top_splitter.setOpaqueResize(True)
                 self._top_splitter.setHandleWidth(6)
 
@@ -337,20 +337,21 @@ class MainWindow(QMainWindow):
             # --- SIDEBAR (Collapsible with Resizable Handle) ---
             with ProfilePhase("explorer_init"):
                 self._explorer = PremiumExplorer(self.event_bus)
-                self._explorer.setMinimumWidth(self._sidebar_width)  # Start at saved width
-                self._explorer.setMaximumWidth(self._sidebar_width)  # Start at saved width
+                self._explorer.setMinimumWidth(Sidebar.MIN_WIDTH)  # Use MIN_WIDTH instead of fixed width
+                self._explorer.setMaximumWidth(Sidebar.MAX_WIDTH)  # Allow flexible resizing
                 
                 # Connect signals
                 self._explorer.new_folder_requested.connect(lambda: self.event_bus.publish("new_folder_requested", {}))
                 self._explorer.more_actions_requested.connect(lambda: self.event_bus.publish("more_actions_requested", {}))
                 
                 self._top_splitter.addWidget(self._explorer)
+                self._top_splitter.setStretchFactor(0, 0)  # Sidebar doesn't stretch
             
             # --- EDITOR (Expandable) ---
             with ProfilePhase("center_panel_init"):
                 self.center = CenterPanel(self.event_bus)
                 self._top_splitter.addWidget(self.center)
-                self._top_splitter.setStretchFactor(1, 1)
+                self._top_splitter.setStretchFactor(1, 1)  # Editor stretches to fill space
             
             # --- AI PANEL ---
             with ProfilePhase("ai_panel_init"):
@@ -409,13 +410,21 @@ class MainWindow(QMainWindow):
                     self._explorer.setVisible(False)
                     self._top_splitter.setHandleWidth(0)
                     self._activity_bar.set_collapsed(True)
+                    # Set splitter sizes to give all space to editor
+                    total_width = self._top_splitter.width()
+                    if total_width > 0:
+                        self._top_splitter.setSizes([0, total_width])
                 else:
                     # Show with saved activity and allow resizing
-                    self._explorer.setMinimumWidth(self._sidebar_width)
+                    self._explorer.setMinimumWidth(Sidebar.MIN_WIDTH)
                     self._explorer.setMaximumWidth(Sidebar.MAX_WIDTH)
                     self._explorer.setVisible(True)
                     self._top_splitter.setHandleWidth(6)
                     self._activity_bar.set_active_activity(self._active_activity)
+                    # Set proper splitter sizes
+                    total_width = self._top_splitter.width()
+                    if total_width > 0:
+                        self._top_splitter.setSizes([self._sidebar_width, total_width - self._sidebar_width])
 
     def toggle_explorer(self):
         """Toggle sidebar visibility via Ctrl+B."""
@@ -439,31 +448,16 @@ class MainWindow(QMainWindow):
                 self._sidebar_width = self._explorer.width()
             self._activity_bar.set_collapsed(True)
 
-            self._explorer.setVisible(True)
-            self._top_splitter.setHandleWidth(6)
-            self._explorer.setUpdatesEnabled(False)
+            # Use simpler approach with immediate size change for now
+            current_sizes = self._top_splitter.sizes()
+            if len(current_sizes) >= 2:
+                total_width = sum(current_sizes)
+                self._top_splitter.setSizes([0, total_width])
+            
             self._explorer.setMinimumWidth(0)
-
-            start_explorer_w = max(0, self._explorer.width())
-            self._explorer.setMaximumWidth(start_explorer_w)
-
-            anim = QPropertyAnimation(self._explorer, b"maximumWidth", self)
-            anim.setStartValue(start_explorer_w)
-            anim.setEndValue(0)
-            anim.setDuration(140)
-            anim.setEasingCurve(QEasingCurve.InOutCubic)
-
-            def on_finished():
-                self._explorer.setMinimumWidth(0)
-                self._explorer.setMaximumWidth(0)
-                self._explorer.setVisible(False)
-                self._top_splitter.setHandleWidth(0)
-                self._explorer.setUpdatesEnabled(True)
-                self._sidebar_anim = None
-
-            anim.finished.connect(on_finished)
-            self._sidebar_anim = anim
-            anim.start()
+            self._explorer.setMaximumWidth(0)
+            self._explorer.setVisible(False)
+            self._top_splitter.setHandleWidth(0)
         else:
             self._sidebar_visible = True
             if self._sidebar_width < Sidebar.MIN_WIDTH:
@@ -479,23 +473,14 @@ class MainWindow(QMainWindow):
 
             self._explorer.setVisible(True)
             self._top_splitter.setHandleWidth(6)
-            self._explorer.setMinimumWidth(0)
-            self._explorer.setMaximumWidth(0)
+            self._explorer.setMinimumWidth(Sidebar.MIN_WIDTH)
+            self._explorer.setMaximumWidth(Sidebar.MAX_WIDTH)
 
-            anim = QPropertyAnimation(self._explorer, b"maximumWidth", self)
-            anim.setStartValue(0)
-            anim.setEndValue(self._sidebar_width)
-            anim.setDuration(140)
-            anim.setEasingCurve(QEasingCurve.InOutCubic)
-
-            def on_finished():
-                self._explorer.setMinimumWidth(Sidebar.MIN_WIDTH)
-                self._explorer.setMaximumWidth(Sidebar.MAX_WIDTH)
-                self._sidebar_anim = None
-
-            anim.finished.connect(on_finished)
-            self._sidebar_anim = anim
-            anim.start()
+            # Use immediate size change for reliability
+            current_sizes = self._top_splitter.sizes()
+            if len(current_sizes) >= 2:
+                total_width = sum(current_sizes)
+                self._top_splitter.setSizes([self._sidebar_width, total_width - self._sidebar_width])
     
     def _on_activity_selected(self, activity_id: str):
         """Handle activity selection from activity bar - VS Code style."""
@@ -922,14 +907,27 @@ class MainWindow(QMainWindow):
         terminal_collapsed = settings.value("layout/terminal_collapsed", False, type=bool)
         if geometry:
             self.restoreGeometry(geometry)
-        if top_splitter_state:
+        
+        # Only restore splitter states if sidebar is visible
+        if self._sidebar_visible and top_splitter_state:
             self._top_splitter.restoreState(top_splitter_state)
+        elif not self._sidebar_visible:
+            # Set splitter to give all space to editor if sidebar is hidden
+            QTimer.singleShot(100, self._apply_hidden_sidebar_layout)
         if main_splitter_state:
             self._workspace_splitter.restoreState(main_splitter_state)
+        
         self.ai_workspace.setVisible(ai_visible)
         if terminal_collapsed:
             self._bottom_widget.collapse()
         self._layout_restored = bool(top_splitter_state or main_splitter_state)
+    
+    def _apply_hidden_sidebar_layout(self):
+        """Apply layout when sidebar is hidden."""
+        if not self._sidebar_visible:
+            total_width = self._top_splitter.width()
+            if total_width > 0:
+                self._top_splitter.setSizes([0, total_width])
             
     def _reset_layout(self):
         """Restore default panel proportions."""

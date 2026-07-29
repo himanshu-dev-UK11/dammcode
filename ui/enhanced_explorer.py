@@ -15,15 +15,49 @@ Redesigned Explorer with:
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QStackedWidget,
     QLineEdit, QToolButton, QSplitter, QFrame, QPushButton,
-    QTreeView, QFileSystemModel, QMenu
+    QTreeView, QFileSystemModel, QMenu, QAbstractItemView, QInputDialog, QApplication
 )
-from PySide6.QtCore import Qt, Signal, QSize, QDir, QMimeData, QPropertyAnimation, QPoint, QEvent
-from PySide6.QtGui import QAction, QCursor, QMouseEvent
+from PySide6.QtCore import Qt, Signal, QSize, QDir, QMimeData, QPropertyAnimation, QPoint, QEvent, QTimer, QSortFilterProxyModel, QModelIndex
+from PySide6.QtGui import QAction, QCursor, QMouseEvent, QKeySequence
 from pathlib import Path
+from typing import Optional
 from ui.design_system import get_design_system, ActivityBar, Sidebar, Spacing, Radius, Easing, FontSize
 from ui.explorer.context_menu import ContextMenuManager
 from core.file_operations import FileOperations
 from ui.explorer.copy_path import CopyPathManager
+from core.file_watcher import FileWatcher
+from core.logger import setup_logger
+from ui.explorer.file_icons import get_file_icon
+
+
+logger = setup_logger(__name__)
+
+
+class ExplorerFilterProxyModel(QSortFilterProxyModel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._query = ""
+        self.setRecursiveFilteringEnabled(True)
+
+    def set_query(self, query: str):
+        self._query = query.strip().lower()
+        self.invalidateFilter()
+
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
+        if not self._query:
+            return True
+
+        model = self.sourceModel()
+        if model is None:
+            return False
+
+        index = model.index(source_row, 0, source_parent)
+        if not index.isValid():
+            return False
+
+        name = model.fileName(index).lower()
+        path = model.filePath(index).lower()
+        return self._query in name or self._query in path
 
 
 class ActivityButton(QPushButton):
@@ -842,14 +876,35 @@ class PremiumExplorer(QWidget):
         self.setMinimumWidth(new_width)
         self.setMaximumWidth(new_width)
         self._current_width = new_width
+        
+        # Update parent splitter to redistribute space
+        if self.parent() and hasattr(self.parent(), 'parent'):
+            parent_splitter = self.parent().parent()
+            if hasattr(parent_splitter, 'setSizes'):
+                current_sizes = parent_splitter.sizes()
+                if len(current_sizes) >= 2:
+                    total_width = sum(current_sizes)
+                    # Maintain total width while adjusting sidebar
+                    current_sizes[0] = new_width
+                    current_sizes[1] = total_width - new_width
+                    parent_splitter.setSizes(current_sizes)
     
     def _on_resize_finished(self):
         """Handle resize drag end - unlock max width to allow future resizing."""
         self._is_resizing = False
-        # After manual resize, keep min at current width but allow max to expand
-        # This preserves the current width while allowing future animations and resizes
-        self.setMinimumWidth(self._current_width)
+        # After manual resize, allow flexible resizing
+        self.setMinimumWidth(Sidebar.MIN_WIDTH)
         self.setMaximumWidth(Sidebar.MAX_WIDTH)
+        
+        # Update parent splitter to ensure proper space distribution
+        if self.parent() and hasattr(self.parent(), 'parent'):
+            parent_splitter = self.parent().parent()
+            if hasattr(parent_splitter, 'setSizes'):
+                current_sizes = parent_splitter.sizes()
+                if len(current_sizes) >= 2:
+                    # Ensure sidebar gets proper space
+                    current_sizes[0] = self._current_width
+                    parent_splitter.setSizes(current_sizes)
         
     def _on_new_folder(self):
         self.new_folder_requested.emit()

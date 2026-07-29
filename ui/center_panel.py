@@ -44,6 +44,7 @@ class CenterPanel(QWidget):
 
         self.dashboard = Dashboard(self.event_bus)
         self.editor_tabs = EditorTabs(self.event_bus)
+        self.editor_tabs.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self._editor_area.addWidget(self.dashboard)
         self._editor_area.addWidget(self.editor_tabs)
