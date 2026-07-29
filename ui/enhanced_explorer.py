@@ -996,9 +996,18 @@ class PremiumExplorer(QWidget):
         self.search_panel = QWidget()
         search_layout = QVBoxLayout(self.search_panel)
         search_layout.setContentsMargins(12, 12, 12, 12)
-        search_label = QLabel("Search")
-        search_label.setStyleSheet("color: #888; font-style: italic;")
-        search_layout.addWidget(search_label)
+        search_layout.setSpacing(8)
+        search_title = QLabel("Search in Workspace")
+        search_title.setStyleSheet("font-size: 12px; font-weight: 600; color: #888;")
+        search_layout.addWidget(search_title)
+
+        self.search_box = SearchBox()
+        self.search_box.search_changed.connect(self._on_search_changed)
+        search_layout.addWidget(self.search_box)
+
+        search_hint = QLabel("Instantly filters the Explorer tree.")
+        search_hint.setStyleSheet("color: #888; font-style: italic;")
+        search_layout.addWidget(search_hint)
         search_layout.addStretch()
         self._content_stack.addWidget(self.search_panel)
         
