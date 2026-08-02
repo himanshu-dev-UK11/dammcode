@@ -301,33 +301,76 @@ class EditorTabs(QWidget):
 
     def duplicate_tab(self, tab_index: int = None):
         """Duplicate current tab."""
-        if self.tab_operations:
-            self.tab_operations.duplicate_tab(tab_index)
-            self.event_bus.publish("editor_duplicate_tab", {})
+        if tab_index is None:
+            tab_index = self.tabs.currentIndex()
+        if tab_index < 0:
+            return
+
+        original = self.tabs.widget(tab_index)
+        if not original:
+            return
+
+        duplicate = CodeEditor(None, self.event_bus)
+        duplicate.load_file(original.toPlainText())
+        duplicate.document().setModified(original.document().isModified())
+        duplicate.cursor_position_changed.connect(self.on_cursor_moved)
+
+        title = self.tabs.tabText(tab_index)
+        new_index = self.tabs.insertTab(tab_index + 1, duplicate, f"{title} (Copy)")
+        self.tabs.setCurrentIndex(new_index)
+        duplicate.setFocus()
+        self.event_bus.publish("editor_duplicate_tab", {})
 
     def close_others(self, keep_index: int = None):
         """Close all tabs except one."""
-        if self.tab_operations:
-            self.tab_operations.close_others(keep_index)
-            self.event_bus.publish("editor_close_others", {})
+        if keep_index is None:
+            keep_index = self.tabs.currentIndex()
+        for i in reversed(range(self.tabs.count())):
+            if i != keep_index:
+                self.close_tab(i)
+        self.event_bus.publish("editor_close_others", {})
 
     def close_left(self, current_index: int = None):
         """Close tabs to the left."""
-        if self.tab_operations:
-            self.tab_operations.close_left(current_index)
-            self.event_bus.publish("editor_close_left", {})
+        if current_index is None:
+            current_index = self.tabs.currentIndex()
+        for i in reversed(range(current_index)):
+            self.close_tab(i)
+        self.event_bus.publish("editor_close_left", {})
 
     def close_right(self, current_index: int = None):
         """Close tabs to the right."""
-        if self.tab_operations:
-            self.tab_operations.close_right(current_index)
-            self.event_bus.publish("editor_close_right", {})
+        if current_index is None:
+            current_index = self.tabs.currentIndex()
+        for i in reversed(range(current_index + 1, self.tabs.count())):
+            self.close_tab(i)
+        self.event_bus.publish("editor_close_right", {})
 
     def reopen_closed_tab(self):
         """Reopen the most recently closed tab."""
-        if self.tab_operations:
-            self.tab_operations.reopen_closed_tab()
-            self.event_bus.publish("editor_reopen_tab", {})
+        if not self._closed_tabs:
+            return
+
+        index, path_str, title, state, content = self._closed_tabs.pop()
+        if path_str and path_str in self.editors:
+            self.tabs.setCurrentIndex(self.tabs.indexOf(self.editors[path_str]))
+            return
+
+        editor = CodeEditor(path_str, self.event_bus)
+        editor.state_changed.connect(lambda state_data, p=path_str: self._on_editor_state_changed(p, state_data))
+        if state:
+            editor.set_pending_restore_state(state)
+        editor.load_file(content)
+        if path_str:
+            self.editors[path_str] = editor
+            self._editor_states[path_str] = state or {}
+
+        new_index = min(index, self.tabs.count())
+        self.tabs.insertTab(new_index, editor, title)
+        self.tabs.setCurrentIndex(new_index)
+        editor.setFocus()
+        self.event_bus.publish("editor_reopen_tab", {})
+        self._publish_session_update()
 
     # ── Search Replace ─────────────────────────────────────────────────────
     def find_text(self, text: str, forward: bool, case_sensitive: bool, regex: bool):
@@ -335,6 +378,13 @@ class EditorTabs(QWidget):
         editor = self.get_current_editor()
         if not editor or not text:
             return
+
+        self._search_state = {
+            "find": text,
+            "forward": forward,
+            "case_sensitive": case_sensitive,
+            "regex": regex,
+        }
 
         flags = QTextDocument.FindFlags()
         if not forward:
@@ -354,6 +404,8 @@ class EditorTabs(QWidget):
         if not found.isNull():
             editor.setTextCursor(found)
             editor.ensureCursorVisible()
+        self._highlight_search_results(editor, text, case_sensitive, regex)
+        self._publish_session_update()
 
     def replace_text(self, find: str, replace: str, forward: bool, case_sensitive: bool, regex: bool):
         """Replace the current selection if it matches, then find next."""
@@ -368,6 +420,7 @@ class EditorTabs(QWidget):
                 cursor.insertText(replace)
 
         self.find_text(find, forward, case_sensitive, regex)
+        self._publish_session_update()
 
     def replace_all_text(self, find: str, replace: str, case_sensitive: bool, regex: bool):
         """Replace all occurrences of find with replace in the current editor."""
@@ -398,6 +451,8 @@ class EditorTabs(QWidget):
             self.event_bus.publish("log_message", {
                 "message": f"Replaced {count} occurrence(s) of '{find}'"
             })
+        self._highlight_search_results(editor, find, case_sensitive, regex)
+        self._publish_session_update()
 
     def _build_session_snapshot(self):
         open_tabs = list(self.editors.keys())
