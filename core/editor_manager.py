@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 from typing import Dict, Optional
 
-from PySide6.QtCore import QFileSystemWatcher, QObject
+from PySide6.QtCore import QFileSystemWatcher, QObject, QTimer
 from PySide6.QtWidgets import QMessageBox, QFileDialog
 
 from core.logger import setup_logger
@@ -38,6 +38,17 @@ class EditorManager(QObject):
 
         # path_str → True/False (True = currently open)
         self.open_files: Dict[str, bool] = {}
+        self.session_data: dict = {
+            "open_tabs": [],
+            "active_tab": None,
+            "tabs": {},
+            "splits": [],
+            "search": None,
+        }
+        self._save_timer = QTimer(self)
+        self._save_timer.setSingleShot(True)
+        self._save_timer.setInterval(150)
+        self._save_timer.timeout.connect(self.save_session)
 
         self.watcher = QFileSystemWatcher()
         self.watcher.fileChanged.connect(self._on_file_changed_externally)
@@ -56,6 +67,7 @@ class EditorManager(QObject):
         self.event_bus.subscribe("request_save_file",    self._handle_save_file)
         self.event_bus.subscribe("request_close_file",   self._handle_close_file)
         self.event_bus.subscribe("editor_saved",         self._handle_editor_saved)
+        self.event_bus.subscribe("editor_session_updated", self._handle_session_updated)
         self.event_bus.subscribe("app_closing",          self.save_session)
 
     # ------------------------------------------------------------------ #
@@ -68,6 +80,8 @@ class EditorManager(QObject):
             if self.session_file.exists():
                 with open(self.session_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
+                self.session_data = data or self.session_data
+                self.event_bus.publish("editor_session_loaded", self.session_data)
                 for path_str in data.get("open_tabs", []):
                     self.open_file(path_str)
         except Exception as exc:
@@ -78,9 +92,14 @@ class EditorManager(QObject):
         try:
             self.session_file.parent.mkdir(parents=True, exist_ok=True)
             with open(self.session_file, "w", encoding="utf-8") as f:
-                json.dump({"open_tabs": list(self.open_files.keys())}, f, indent=4)
+                if not self.session_data.get("open_tabs"):
+                    self.session_data["open_tabs"] = list(self.open_files.keys())
+                json.dump(self.session_data, f, indent=4)
         except Exception as exc:
             logger.error(f"Failed to save editor session: {exc}")
+
+    def _schedule_session_save(self):
+        self._save_timer.start()
 
     # ------------------------------------------------------------------ #
     #  EventBus handlers                                                   #
@@ -148,6 +167,12 @@ class EditorManager(QObject):
         if path_str and path_str not in self.watcher.files():
             self.watcher.addPath(path_str)
 
+    def _handle_session_updated(self, data: dict):
+        """Store the latest editor session state and save it shortly after."""
+        if isinstance(data, dict):
+            self.session_data = data
+            self._schedule_session_save()
+
     # ------------------------------------------------------------------ #
     #  Core: open                                                          #
     # ------------------------------------------------------------------ #
@@ -179,6 +204,19 @@ class EditorManager(QObject):
             logger.info(f"[EditorManager.open_file] Path is not file, ignoring: {path}")
             return
 
+        path_str_resolved = str(path)
+        if path_str_resolved in self.open_files:
+            logger.info(f"[EditorManager.open_file] Path already open, reusing existing tab: {path_str_resolved}")
+            self.event_bus.publish("file_opened", {
+                "path": path,
+                "path_str": path_str_resolved,
+                "content": "",
+                "encoding": None,
+                "read_only": False,
+                "already_open": True,
+            })
+            return
+
         # Large file warning
         try:
             size = path.stat().st_size
@@ -201,11 +239,10 @@ class EditorManager(QObject):
             return
 
         # Track & watch
-        path_str_resolved = str(path)
         self.open_files[path_str_resolved] = True
         if path_str_resolved not in self.watcher.files():
             self.watcher.addPath(path_str_resolved)
-        self.save_session()
+        self._schedule_session_save()
 
         # Publish so EditorTabs can open the tab
         logger.info(f"[EditorManager.open_file] Publishing file_opened event for: {path_str_resolved}")
@@ -215,6 +252,7 @@ class EditorManager(QObject):
             "content":     content,
             "encoding":    encoding,
             "read_only":   is_read_only,
+            "already_open": False,
         })
         self.event_bus.publish("log_message", {"message": f"Opened: {path.name}"})
 
