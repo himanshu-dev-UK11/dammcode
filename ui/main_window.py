@@ -35,7 +35,7 @@ from PySide6.QtWidgets import (
     QMainWindow, QWidget, QMenu, QMessageBox, 
     QFileDialog, QApplication, QSplitter, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QStackedWidget, QStyle
 )
-from PySide6.QtCore import Qt, QSize, QSettings, QEasingCurve, QPropertyAnimation
+from PySide6.QtCore import Qt, QSize, QSettings, QEasingCurve, QPropertyAnimation, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut, QAction
 
 from core.logger import setup_logger
