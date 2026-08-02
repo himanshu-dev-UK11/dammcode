@@ -263,11 +263,7 @@ class EditorTabs(QWidget):
     # ── Sticky Tabs ────────────────────────────────────────────────────────
     def setup_sticky_tab_manager(self):
         """Setup sticky tab manager."""
-        if not self.sticky_tab_manager:
-            self.sticky_tab_manager = StickyTabManager(self.tabs)
-            self.sticky_tab_manager.tab_pinned.connect(self._on_tab_pinned)
-            self.sticky_tab_manager.tab_unpinned.connect(self._on_tab_unpinned)
-        return self.sticky_tab_manager
+        return None
 
     def _on_tab_pinned(self, path: str):
         """Handle tab pinned event."""
@@ -283,21 +279,25 @@ class EditorTabs(QWidget):
 
     def is_tab_pinned(self, tab_index: int) -> bool:
         """Check if tab is pinned."""
-        if self.sticky_tab_manager:
-            return self.sticky_tab_manager.is_tab_pinned(tab_index)
-        return False
+        path = self._get_tab_path(tab_index)
+        return bool(path and path in self.pinned_tabs)
 
     def toggle_pin_tab(self, tab_index: int):
         """Toggle tab pin state."""
-        if self.sticky_tab_manager:
-            self.sticky_tab_manager.toggle_pin_tab(tab_index)
+        path = self._get_tab_path(tab_index)
+        if not path:
+            return
+
+        if path in self.pinned_tabs:
+            self._on_tab_unpinned(path)
+        else:
+            self._on_tab_pinned(path)
+        self._update_tab_labels()
 
     # ── Tab Operations ─────────────────────────────────────────────────────
     def setup_tab_operations(self):
         """Setup tab operations manager."""
-        if not self.tab_operations:
-            self.tab_operations = TabOperationsManager(self.tabs)
-        return self.tab_operations
+        return None
 
     def duplicate_tab(self, tab_index: int = None):
         """Duplicate current tab."""
