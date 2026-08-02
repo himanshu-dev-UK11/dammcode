@@ -34,6 +34,16 @@ from ui.explorer.search import SearchBox
 logger = setup_logger(__name__)
 
 
+class _NullEventBus:
+    """Minimal event bus stub for headless or test-only widget instantiation."""
+
+    def subscribe(self, *args, **kwargs):
+        return None
+
+    def publish(self, *args, **kwargs):
+        return None
+
+
 class ExplorerFilterProxyModel(QSortFilterProxyModel):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -420,8 +430,8 @@ class PremiumFileTree(QTreeView):
 
     def __init__(self, event_bus, parent=None):
         super().__init__(parent)
-        self.event_bus = event_bus
-        self.file_ops = FileOperations(event_bus, parent=self)
+        self.event_bus = event_bus or _NullEventBus()
+        self.file_ops = FileOperations(self.event_bus, parent=self)
         self.copy_path_manager = CopyPathManager(event_bus)
         self._root_path: Optional[Path] = None
         self._workspace_roots: list[Path] = []
@@ -952,7 +962,7 @@ class PremiumExplorer(QWidget):
     
     def __init__(self, event_bus=None, parent=None, root_path=None):
         super().__init__(parent)
-        self.event_bus = event_bus
+        self.event_bus = event_bus or _NullEventBus()
         self._current_width = Sidebar.DEFAULT_WIDTH
         self._is_resizing = False
         self._has_workspace = False
