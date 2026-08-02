@@ -5,7 +5,7 @@ Sticky Tabs, Tab Operations, Split Editor support.
 """
 from pathlib import Path
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QTabWidget, QMenu, QSplitter, QHBoxLayout, QTabBar
+    QWidget, QVBoxLayout, QTabWidget, QMenu, QSplitter, QHBoxLayout, QTabBar, QTextEdit
 )
 from PySide6.QtCore import Qt, Signal, QObject, QRegularExpression
 from PySide6.QtGui import QTextDocument, QTextCursor, QKeySequence, QAction, QShortcut
