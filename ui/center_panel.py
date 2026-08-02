@@ -30,6 +30,7 @@ class CenterPanel(QWidget):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.event_bus.subscribe("file_opened", self._on_file_opened)
+        self.event_bus.subscribe("file_reveal_requested", self._on_file_reveal_requested)
         self.event_bus.subscribe("file_closed", self._on_file_closed)
         self.event_bus.subscribe("editor_save_current_requested", self._on_save_current_requested)
 
@@ -69,6 +70,13 @@ class CenterPanel(QWidget):
         if path:
             self._editor_area.setCurrentWidget(self.editor_tabs)
             self.editor_tabs.open_file(path, content, read_only=read_only)
+
+    def _on_file_reveal_requested(self, data):
+        """Focus an existing editor tab without reloading the file."""
+        path = data.get("path")
+        if path:
+            self._editor_area.setCurrentWidget(self.editor_tabs)
+            self.editor_tabs.open_file(path, data.get("content", ""), read_only=data.get("read_only", False))
 
     def _on_save_current_requested(self, data):
         editor = self.editor_tabs.get_current_editor()
