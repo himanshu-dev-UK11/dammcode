@@ -54,6 +54,16 @@ class EditorTabs(QWidget):
         self.event_bus = event_bus
         self.editors = {}  # path_str -> CodeEditor
         self.pinned_tabs = set()  # paths of pinned tabs
+        self._editor_states = {}
+        self._closed_tabs = []
+        self._search_state = None
+        self._session_state = {
+            "open_tabs": [],
+            "active_tab": None,
+            "tabs": {},
+            "splits": [],
+        }
+        self._session_loaded = False
         self.lsp_manager = None
         
         # Feature managers
@@ -103,9 +113,11 @@ class EditorTabs(QWidget):
 
         # Tabs widget (premium styling via global QSS + minimal inline customization)
         self.tabs = QTabWidget()
+        self.tabs.setDocumentMode(True)
         self.tabs.setTabsClosable(True)
         self.tabs.setMovable(True)
         self.tabs.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tabs.setTabBar(EditorTabBar())
         self.tabs.tabBar().setElideMode(Qt.TextElideMode.ElideRight)
         self.tabs.tabBar().setUsesScrollButtons(True)
         # Tab styling is now primarily driven by ThemeManager global QSS
@@ -150,10 +162,12 @@ class EditorTabs(QWidget):
         self.tabs.tabBar().tabMoved.connect(self._on_tab_reordered)
         self.tabs.tabBar().tabBarClicked.connect(self._on_tab_clicked)
         self.tabs.tabBar().tabBarDoubleClicked.connect(self._on_tab_double_clicked)
+        if isinstance(self.tabs.tabBar(), EditorTabBar):
+            self.tabs.tabBar().middle_clicked.connect(self.close_tab)
 
-        # Initialize managers that context menu depends on
-        self.setup_sticky_tab_manager()
-        self.setup_tab_operations()
+        # Session lifecycle
+        self.event_bus.subscribe("editor_session_loaded", self._on_editor_session_loaded)
+        self.event_bus.subscribe("editor_session_updated", self._on_editor_session_updated)
 
     def _show_search(self):
         """Show the find/replace bar and focus it."""
