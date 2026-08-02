@@ -277,6 +277,22 @@ class EditorTabs(QWidget):
         self.tab_unpinned.emit(path)
         self.event_bus.publish("editor_tab_unpinned", {"path": path})
 
+    def _tab_label(self, path_str: str, editor: CodeEditor = None):
+        name = Path(path_str).name if path_str else "Untitled"
+        if editor and editor.isReadOnly():
+            return f"{name} 🔒"
+        if path_str in self.pinned_tabs:
+            return f"📌 {name}"
+        if editor and editor.document().isModified():
+            return f"{name} ●"
+        return name
+
+    def _update_tab_labels(self):
+        for path_str, editor in self.editors.items():
+            idx = self.tabs.indexOf(editor)
+            if idx >= 0:
+                self.tabs.setTabText(idx, self._tab_label(path_str, editor))
+
     def is_tab_pinned(self, tab_index: int) -> bool:
         """Check if tab is pinned."""
         path = self._get_tab_path(tab_index)
@@ -624,7 +640,7 @@ class EditorTabs(QWidget):
         # Reopen
         reopen_action = QAction("Reopen Closed Tab", self)
         reopen_action.triggered.connect(self.reopen_closed_tab)
-        reopen_action.setEnabled(self.tab_operations and self.tab_operations.can_reopen_tab())
+        reopen_action.setEnabled(bool(self._closed_tabs))
         menu.addAction(reopen_action)
         
         menu.exec_(self.tabs.tabBar().mapToGlobal(pos))
@@ -671,7 +687,7 @@ class EditorTabs(QWidget):
         logger.info(f"[EditorTabs.open_file] Adding new tab")
         # Add tab
         self.editors[path_str] = editor
-        tab_label = path.name + (" 🔒" if read_only else "")
+        tab_label = self._tab_label(path_str, editor)
         idx = self.tabs.addTab(editor, tab_label)
         self.tabs.setCurrentIndex(idx)
         editor.setFocus()
@@ -766,10 +782,7 @@ class EditorTabs(QWidget):
         if path_str in self.editors:
             editor = self.editors[path_str]
             idx    = self.tabs.indexOf(editor)
-            name   = Path(path_str).name
-            read_only = editor.isReadOnly()
-            suffix = " 🔒" if read_only else (" ●" if modified else "")
-            self.tabs.setTabText(idx, name + suffix)
+            self.tabs.setTabText(idx, self._tab_label(path_str, editor))
             self.event_bus.publish("file_modified_state", {
                 "path": path_str, "modified": modified
             })
@@ -785,8 +798,7 @@ class EditorTabs(QWidget):
             editor = self.editors[path_str]
             editor.document().setModified(False)
             idx  = self.tabs.indexOf(editor)
-            name = Path(path_str).name
-            self.tabs.setTabText(idx, name)
+            self.tabs.setTabText(idx, self._tab_label(path_str, editor))
             self.event_bus.publish("editor_saved", {"path": path_str})
             self._editor_states[path_str] = editor.capture_state() if hasattr(editor, "capture_state") else self._editor_states.get(path_str, {})
             self._publish_session_update()
