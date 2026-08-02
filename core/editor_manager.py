@@ -155,7 +155,7 @@ class EditorManager(QObject):
             del self.open_files[path_str]
             if path_str in self.watcher.files():
                 self.watcher.removePath(path_str)
-            self.save_session()
+            self._schedule_session_save()
             self.event_bus.publish("file_closed", {"path": path_str})
         else:
             logger.warning(f"[EditorManager._handle_close_file] Path not open: {path_str}")
