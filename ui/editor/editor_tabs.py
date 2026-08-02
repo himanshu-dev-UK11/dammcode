@@ -5,11 +5,11 @@ Sticky Tabs, Tab Operations, Split Editor support.
 """
 from pathlib import Path
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QTabWidget, QMenu, QSplitter, QHBoxLayout
+    QWidget, QVBoxLayout, QTabWidget, QMenu, QSplitter, QHBoxLayout, QTabBar
 )
 from PySide6.QtCore import Qt, Signal, QObject
-from PySide6.QtGui import QTextDocument, QTextCursor, QKeySequence, QAction
-from PySide6.QtGui import QShortcut
+from PySide6.QtGui import QTextDocument, QTextCursor, QKeySequence, QAction, QShortcut, QRegularExpression
+from PySide6.QtGui import QMouseEvent
 
 from ui.editor.code_editor import CodeEditor
 from ui.editor.search_replace import SearchReplaceWidget
@@ -25,6 +25,21 @@ from ui.editor.splitted_editor import SplitEditorManager
 from core.logger import setup_logger
 
 logger = setup_logger(__name__)
+
+
+class EditorTabBar(QTabBar):
+    """Tab bar with middle-click close support and room for IDE-style actions."""
+
+    middle_clicked = Signal(int)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MiddleButton:
+            index = self.tabAt(event.position().toPoint())
+            if index >= 0:
+                self.middle_clicked.emit(index)
+                event.accept()
+                return
+        super().mouseReleaseEvent(event)
 
 
 class EditorTabs(QWidget):
