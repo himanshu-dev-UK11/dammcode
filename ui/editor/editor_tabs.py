@@ -7,8 +7,8 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTabWidget, QMenu, QSplitter, QHBoxLayout, QTabBar
 )
-from PySide6.QtCore import Qt, Signal, QObject
-from PySide6.QtGui import QTextDocument, QTextCursor, QKeySequence, QAction, QShortcut, QRegularExpression
+from PySide6.QtCore import Qt, Signal, QObject, QRegularExpression
+from PySide6.QtGui import QTextDocument, QTextCursor, QKeySequence, QAction, QShortcut
 from PySide6.QtGui import QMouseEvent
 
 from ui.editor.code_editor import CodeEditor
