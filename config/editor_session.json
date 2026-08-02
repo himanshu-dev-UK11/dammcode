@@ -1,3 +1,46 @@
 {
-    "open_tabs": []
+    "active_tab": "C:\\Projects\\mycodingmaster\\temp\\editor_smoke\\b.py",
+    "open_tabs": [
+        "C:\\Projects\\mycodingmaster\\temp\\editor_smoke\\a.py",
+        "C:\\Projects\\mycodingmaster\\temp\\editor_smoke\\b.py"
+    ],
+    "search": {
+        "case_sensitive": false,
+        "find": "beta",
+        "forward": true,
+        "regex": false
+    },
+    "splits": [],
+    "tabs": {
+        "C:\\Projects\\mycodingmaster\\temp\\editor_smoke\\a.py": {
+            "cursor": {
+                "anchor": 26,
+                "column": 1,
+                "line": 3,
+                "position": 26
+            },
+            "folded_ranges": [],
+            "modified": false,
+            "read_only": false,
+            "scroll": {
+                "horizontal": 0,
+                "vertical": 0
+            }
+        },
+        "C:\\Projects\\mycodingmaster\\temp\\editor_smoke\\b.py": {
+            "cursor": {
+                "anchor": 9,
+                "column": 10,
+                "line": 1,
+                "position": 9
+            },
+            "folded_ranges": [],
+            "modified": true,
+            "read_only": false,
+            "scroll": {
+                "horizontal": 0,
+                "vertical": 0
+            }
+        }
+    }
 }
