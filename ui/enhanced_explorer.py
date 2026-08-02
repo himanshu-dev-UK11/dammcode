@@ -950,17 +950,22 @@ class PremiumExplorer(QWidget):
     new_folder_requested = Signal()
     more_actions_requested = Signal()
     
-    def __init__(self, event_bus, parent=None):
+    def __init__(self, event_bus=None, parent=None, root_path=None):
         super().__init__(parent)
         self.event_bus = event_bus
         self._current_width = Sidebar.DEFAULT_WIDTH
         self._is_resizing = False
         self._has_workspace = False
+        self._pending_root_path = root_path
         self.setup_ui()
         
-        # Subscribe to workspace events
-        self.event_bus.subscribe("workspace_loaded", self._on_workspace_loaded)
-        self.event_bus.subscribe("workspace_closed", self._on_workspace_closed)
+        # Subscribe to workspace events when an event bus is available
+        if self.event_bus is not None:
+            self.event_bus.subscribe("workspace_loaded", self._on_workspace_loaded)
+            self.event_bus.subscribe("workspace_closed", self._on_workspace_closed)
+
+        if self._pending_root_path:
+            self.set_root_path(self._pending_root_path)
         
     def setup_ui(self):
         p = get_design_system().palette
