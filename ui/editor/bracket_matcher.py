@@ -112,10 +112,7 @@ class BracketMatcher(QObject):
                     self.editor.setExtraSelections([])
                     return
                     
-        # Clear previous selections
-        self.editor.setExtraSelections([])
-        
-        selections = self.editor.extraSelections()
+        selections = []
         
         # Highlight current bracket
         if char in self.open_brackets or char in self.close_brackets:
@@ -136,7 +133,10 @@ class BracketMatcher(QObject):
                 selection2.format = self.highlight_format
                 selections.append(selection2)
                 
-        self.editor.setExtraSelections(selections)
+        if hasattr(self.editor, "set_bracket_highlights"):
+            self.editor.set_bracket_highlights(selections)
+        else:
+            self.editor.setExtraSelections(selections)
         
     def get_bracket_at_position(self, pos: int):
         """Get bracket character at position, if any."""
