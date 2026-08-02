@@ -399,6 +399,86 @@ class EditorTabs(QWidget):
                 "message": f"Replaced {count} occurrence(s) of '{find}'"
             })
 
+    def _build_session_snapshot(self):
+        open_tabs = list(self.editors.keys())
+        active_editor = self.get_current_editor()
+        active_path = getattr(active_editor, "file_path", None) if active_editor else None
+        return {
+            "open_tabs": open_tabs,
+            "active_tab": active_path,
+            "tabs": dict(self._editor_states),
+            "splits": self._session_state.get("splits", []),
+            "search": self._search_state,
+        }
+
+    def _publish_session_update(self):
+        self.event_bus.publish("editor_session_updated", self._build_session_snapshot())
+
+    def _on_editor_session_loaded(self, data: dict):
+        self._session_state = data or self._session_state
+        self._editor_states = dict(self._session_state.get("tabs", {}))
+        self._session_loaded = True
+
+    def _on_editor_session_updated(self, data: dict):
+        if not data:
+            return
+        self._session_state = data
+        tabs = data.get("tabs", {})
+        if isinstance(tabs, dict):
+            self._editor_states.update(tabs)
+
+    def _on_editor_state_changed(self, path_str: str, state: dict):
+        if not path_str:
+            return
+        self._editor_states[path_str] = state or {}
+        self._publish_session_update()
+
+    def _restore_editor_state(self, editor: CodeEditor, path_str: str):
+        state = self._editor_states.get(path_str)
+        if state:
+            editor.restore_state(state)
+
+    def _highlight_search_results(self, editor: CodeEditor, text: str, case_sensitive: bool, regex: bool):
+        if not editor or not text:
+            editor.set_search_highlights([])
+            return
+
+        selections = []
+        cursor = QTextCursor(editor.document())
+        flags = QTextDocument.FindFlags()
+        if case_sensitive:
+            flags |= QTextDocument.FindCaseSensitively
+
+        pattern = QRegularExpression(text) if regex else None
+        if pattern and not pattern.isValid():
+            editor.set_search_highlights([])
+            return
+
+        cursor.movePosition(QTextCursor.Start)
+        while True:
+            if regex and pattern is not None:
+                match = pattern.match(editor.toPlainText(), cursor.position())
+                if not match.hasMatch():
+                    break
+                found = QTextCursor(editor.document())
+                found.setPosition(match.capturedStart())
+                found.setPosition(match.capturedEnd(), QTextCursor.KeepAnchor)
+                cursor.setPosition(match.capturedEnd())
+            else:
+                found = editor.document().find(text, cursor, flags)
+                if found.isNull():
+                    break
+                cursor = QTextCursor(found)
+            selection = QTextEdit.ExtraSelection()
+            selection.cursor = QTextCursor(found)
+            selection.format.setBackground(QColor("rgba(250, 204, 21, 0.25)"))
+            selections.append(selection)
+        editor.set_search_highlights(selections)
+
+    def _clear_search_results(self, editor: CodeEditor):
+        if editor:
+            editor.set_search_highlights([])
+
     def _on_tab_reordered(self, from_index: int, to_index: int):
         """Handle tab reorder event."""
         self.event_bus.publish("editor_tab_reordered", {
@@ -505,13 +585,20 @@ class EditorTabs(QWidget):
             logger.info(f"[EditorTabs.open_file] File already open, switching to existing tab")
             idx = self.tabs.indexOf(self.editors[path_str])
             self.tabs.setCurrentIndex(idx)
-            self.editors[path_str].setFocus()
-            self.event_bus.publish("editor_opened", {"path": path_str, "index": idx})
+            editor = self.editors[path_str]
+            self._restore_editor_state(editor, path_str)
+            editor.setFocus()
+            self._highlight_search_results(editor, *(self._search_state or {}).get("find", ""), *(False, False)) if False else None
             return
 
         logger.info(f"[EditorTabs.open_file] Creating new editor widget")
         # Create editor widget
         editor = CodeEditor(path_str, self.event_bus)
+        editor.state_changed.connect(lambda state, p=path_str: self._on_editor_state_changed(p, state))
+
+        if path_str in self._editor_states:
+            editor.set_pending_restore_state(self._editor_states[path_str])
+
         editor.load_file(content)
 
         if read_only:
@@ -546,11 +633,21 @@ class EditorTabs(QWidget):
             editor.set_lsp_manager(self.lsp_manager)
             self.lsp_manager.open_document(path, lang_id, content)
 
+        self._restore_editor_state(editor, path_str)
+        if self._search_state:
+            self._highlight_search_results(
+                editor,
+                self._search_state.get("find", ""),
+                self._search_state.get("case_sensitive", False),
+                self._search_state.get("regex", False),
+            )
+
         logger.info(f"[EditorTabs.open_file] Tab added successfully, index: {idx}")
         # Events
         self.event_bus.publish("editor_opened", {"path": path_str, "index": idx})
         self.event_bus.publish("tab_created",   {"path": path_str, "index": idx})
         logger.info(f"Opened tab: {path.name}")
+        self._publish_session_update()
 
     def close_tab(self, index):
         """Close a tab by index."""
@@ -578,11 +675,10 @@ class EditorTabs(QWidget):
             elif reply == QMessageBox.Cancel:
                 return
 
-        # Track in tab_operations for reopen support
-        if self.tab_operations:
-            self.tab_operations.closed_tabs.append(
-                (index, path_str, self.tabs.tabText(index))
-            )
+        state = editor.capture_state() if hasattr(editor, "capture_state") else {}
+        if path_str:
+            self._closed_tabs.append((index, path_str, self.tabs.tabText(index), state, editor.toPlainText() if hasattr(editor, "toPlainText") else ""))
+            self._editor_states[path_str] = state
 
         # Remove from editors dict first
         if path_str and path_str in self.editors:
@@ -597,6 +693,7 @@ class EditorTabs(QWidget):
             self.event_bus.publish("request_close_file", {"path": path_str})
             self.event_bus.publish("editor_closed",      {"path": path_str, "index": index})
             self.event_bus.publish("tab_closed",         {"path": path_str, "index": index})
+        self._publish_session_update()
 
     def force_close_tab(self, path_str):
         """Force close a tab by path."""
@@ -607,6 +704,7 @@ class EditorTabs(QWidget):
                 self.tabs.removeTab(idx)
             editor.deleteLater()
             self.event_bus.publish("editor_closed", {"path": path_str, "index": idx})
+            self._publish_session_update()
 
     def on_editor_modified(self, path_str, modified):
         """Handle editor modified state change — update tab label + publish events."""
@@ -623,6 +721,8 @@ class EditorTabs(QWidget):
             self.event_bus.publish("editor_modified", {
                 "path": path_str, "modified": modified
             })
+            self._editor_states[path_str] = editor.capture_state() if hasattr(editor, "capture_state") else self._editor_states.get(path_str, {})
+            self._publish_session_update()
             
     def on_editor_saved(self, path_str):
         """Handle editor save completion — clear modified indicator."""
@@ -633,6 +733,8 @@ class EditorTabs(QWidget):
             name = Path(path_str).name
             self.tabs.setTabText(idx, name)
             self.event_bus.publish("editor_saved", {"path": path_str})
+            self._editor_states[path_str] = editor.capture_state() if hasattr(editor, "capture_state") else self._editor_states.get(path_str, {})
+            self._publish_session_update()
 
     def on_tab_changed(self, index):
         """Handle tab change — update breadcrumb, status bar, minimap."""
@@ -648,6 +750,16 @@ class EditorTabs(QWidget):
             if path and path in self.editors:
                 modified = editor.document().isModified()
                 self.on_editor_modified(path, modified)
+            if self._search_state:
+                self._highlight_search_results(
+                    editor,
+                    self._search_state.get("find", ""),
+                    self._search_state.get("case_sensitive", False),
+                    self._search_state.get("regex", False),
+                )
+            else:
+                self._clear_search_results(editor)
+            self._publish_session_update()
 
     def on_cursor_moved(self):
         """Handle cursor movement."""
