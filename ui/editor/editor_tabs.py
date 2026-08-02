@@ -568,6 +568,8 @@ class EditorTabs(QWidget):
     def _on_tab_double_clicked(self, index: int):
         """Handle tab double-click event."""
         path = self._get_tab_path(index)
+        if index >= 0:
+            self.toggle_pin_tab(index)
         self.event_bus.publish("editor_tab_double_clicked", {
             "path": path,
             "index": index
@@ -659,7 +661,13 @@ class EditorTabs(QWidget):
             editor = self.editors[path_str]
             self._restore_editor_state(editor, path_str)
             editor.setFocus()
-            self._highlight_search_results(editor, *(self._search_state or {}).get("find", ""), *(False, False)) if False else None
+            if self._search_state:
+                self._highlight_search_results(
+                    editor,
+                    self._search_state.get("find", ""),
+                    self._search_state.get("case_sensitive", False),
+                    self._search_state.get("regex", False),
+                )
             return
 
         logger.info(f"[EditorTabs.open_file] Creating new editor widget")
