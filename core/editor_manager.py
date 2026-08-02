@@ -207,7 +207,7 @@ class EditorManager(QObject):
         path_str_resolved = str(path)
         if path_str_resolved in self.open_files:
             logger.info(f"[EditorManager.open_file] Path already open, reusing existing tab: {path_str_resolved}")
-            self.event_bus.publish("file_opened", {
+            self.event_bus.publish("file_reveal_requested", {
                 "path": path,
                 "path_str": path_str_resolved,
                 "content": "",
