@@ -264,6 +264,29 @@ def initialize_background_systems(event_bus, window, error_manager):
             execution_engine.attach_change_applier(change_applier)
             execution_engine.attach_verification_engine(verification_engine)
             TaskExecutor.set_chat_engine(chat_engine)
+
+            def _on_edit_confirmation_required(data):
+                request_id = data.get("request_id", "")
+                reason = data.get("reason", "Destructive file changes require confirmation.")
+                files = data.get("files", [])
+                file_preview = "\n".join(f"• {path}" for path in files[:10]) or "• (no files listed)"
+
+                reply = QMessageBox.question(
+                    window,
+                    "Confirm AI File Changes",
+                    f"{reason}\n\nFiles:\n{file_preview}\n\nProceed with these changes?",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No,
+                )
+
+                if reply == QMessageBox.Yes and request_id:
+                    try:
+                        result = change_applier.confirm_pending(request_id)
+                        logger.info(f"Destructive change confirmation applied for {request_id}: {bool(result and result.success)}")
+                    except Exception as e:
+                        logger.warning(f"Failed to apply confirmed destructive change {request_id}: {e}")
+
+            event_bus.subscribe("edit_confirmation_required", _on_edit_confirmation_required)
             
             context_engine = None
             try:

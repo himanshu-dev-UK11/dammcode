@@ -72,6 +72,7 @@ class ChangeApplier:
         self.event_bus = event_bus
         self._root = Path(project_root)
         self._rollback_manager = RollbackManager(project_root)
+        self._pending_confirmations: Dict[str, tuple[ChangeSet, ChangeRequest]] = {}
 
         logger.debug(f"ChangeApplier initialized (root='{self._root.name}').")
 
@@ -102,6 +103,20 @@ class ChangeApplier:
                 rollback_id=None,
             )
 
+        # Sort operations by type and dependencies
+        operations = self._sort_operations(change_set.operations)
+
+        if self._has_unconfirmed_destructive_changes(operations, request):
+            self._pending_confirmations[request.request_id] = (change_set, request)
+            self._publish_confirmation_required(request, operations)
+            return ApplyResult(
+                success=False,
+                applied_count=0,
+                failed_count=len([op for op in operations if op.op_type == OperationType.DELETE]),
+                errors=["Destructive file changes require confirmation before applying."],
+                rollback_id=None,
+            )
+
         # Create rollback checkpoint
         rollback_id = self._rollback_manager.create_checkpoint(
             change_set=change_set,
@@ -115,19 +130,6 @@ class ChangeApplier:
             f"rollback_id={rollback_id[:8]}..."
         )
         self._publish_progress(request, 0, "Creating rollback checkpoint")
-
-        # Sort operations by type and dependencies
-        operations = self._sort_operations(change_set.operations)
-
-        if self._has_unconfirmed_destructive_changes(operations, request):
-            self._publish_confirmation_required(request, operations)
-            return ApplyResult(
-                success=False,
-                applied_count=0,
-                failed_count=len([op for op in operations if op.op_type == OperationType.DELETE]),
-                errors=["Destructive file changes require confirmation before applying."],
-                rollback_id=None,
-            )
 
         # Apply operations
         applied = 0
@@ -170,6 +172,16 @@ class ChangeApplier:
             errors=errors,
             rollback_id=rollback_id,
         )
+
+    def confirm_pending(self, request_id: str) -> Optional[ApplyResult]:
+        """Apply a previously blocked destructive change request after user confirmation."""
+        pending = self._pending_confirmations.pop(request_id, None)
+        if not pending:
+            return None
+
+        change_set, request = pending
+        confirmed_request = request.with_metadata("confirmed_destructive", True)
+        return self.apply(change_set, confirmed_request)
 
     # ── Operation application ────────────────────────────────────────────────
 
