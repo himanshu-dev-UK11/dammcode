@@ -1,54 +1,65 @@
 """
-Bottom Status Bar — v0.4
+Bottom Status Bar — v1.0 (Premium Purple Accent)
 
-Clean 22px status bar. No VS Code blue. Uses Surface 3 background.
+Clean 24px status bar matching the reference design.
+Purple/violet background with light text.
 Shows: [AI Status] [Workspace] [Branch] ─── [Ln:Col] [Lang] [Indent] [Version]
-Accent color used only for active/warning states.
 """
 
 from PySide6.QtWidgets import QStatusBar, QLabel, QWidget, QHBoxLayout, QFrame
 from PySide6.QtCore import Qt
 from pathlib import Path
+from ui.design_system import Spacing
+
+
+class StatusBarColors:
+    """Color constants for the purple status bar — tuned for readability."""
+    BG = "#4C1D95"
+    TEXT_PRIMARY = "#FFFFFF"
+    TEXT_SECONDARY = "#E9D5FF"
+    TEXT_TERTIARY = "#C4B5FD"
+    ACCENT_SUCCESS = "#34D399"
+    ACCENT_WARNING = "#FBBF24"
+    ACCENT_ERROR = "#F87171"
+    ACCENT_INFO = "#93C5FD"
 
 
 def _separator_label() -> QLabel:
     """Subtle dot separator between status sections."""
-    from ui.design_system import get_design_system
-    p = get_design_system().palette
+    from ui.design_system import FontSize
     lbl = QLabel("·")
-    lbl.setStyleSheet(f"color: {p.text_tertiary}; background-color: transparent; padding: 0 6px; font-size: 10px;")
+    lbl.setStyleSheet(f"color: {StatusBarColors.TEXT_TERTIARY}; background-color: transparent; padding: 0 6px; font-size: {FontSize.XS}px;")
     return lbl
 
 
 class StatusChip(QLabel):
-    """A small inline badge in the status bar."""
+    """A small inline badge in the status bar — tuned for purple background."""
     def __init__(self, text: str = "", accent: bool = False):
         super().__init__(text)
         self._accent = accent
-        self._update_style(accent)
+        self._color = StatusBarColors.TEXT_SECONDARY
+        self._update_style()
 
-    def _update_style(self, accent: bool):
-        from ui.design_system import get_design_system, FontSize
-        p = get_design_system().palette
-        if accent:
-            self.setStyleSheet(f"""
-                color: {p.accent};
-                background-color: transparent;
-                font-size: {FontSize.XS}px;
-                padding: 0 6px;
-                font-weight: 500;
-            """)
-        else:
-            self.setStyleSheet(f"""
-                color: {p.text_secondary};
-                background-color: transparent;
-                font-size: {FontSize.XS}px;
-                padding: 0 6px;
-            """)
+    def _update_style(self):
+        from ui.design_system import FontSize
+        color = self._color
+        weight = "600" if self._accent else "500"
+        self.setStyleSheet(f"""
+            color: {color};
+            background-color: transparent;
+            font-size: {FontSize.XS}px;
+            padding: 0 6px;
+            font-weight: {weight};
+        """)
 
     def set_accent(self, on: bool):
         self._accent = on
-        self._update_style(on)
+        self._update_style()
+
+    def set_color(self, color: str):
+        """Set a custom text color (e.g. for error/warning/success states)."""
+        self._color = color
+        self._update_style()
 
 
 class BottomStatusBar(QStatusBar):
@@ -73,21 +84,34 @@ class BottomStatusBar(QStatusBar):
         self._subscribe()
 
     def setup_ui(self):
-        # ── Left section ──────────────────────────────────────────────────────
+        from ui.design_system import FontSize
+        
+        self.setStyleSheet(f"""
+            QStatusBar#BottomStatusBar {{
+                background-color: {StatusBarColors.BG};
+                border-top: 1px solid rgba(0, 0, 0, 0.25);
+                color: {StatusBarColors.TEXT_SECONDARY};
+                font-size: {FontSize.XS}px;
+                padding: 0 {Spacing.SM}px;
+                min-height: 24px;
+                max-height: 24px;
+            }}
+            QStatusBar#BottomStatusBar::item {{
+                border: none;
+            }}
+        """)
+
         self._lbl_ai       = StatusChip("● AI: Idle")
+        self._lbl_ai.set_color(StatusBarColors.TEXT_SECONDARY)
         self._lbl_ws       = StatusChip("No Workspace")
         self._lbl_branch   = StatusChip("⎇ main")
-        # Provider chip: hidden until a provider connects
         self._lbl_provider = StatusChip("")
         self._lbl_provider.setVisible(False)
-        # File chip: hidden until a file is open
         self._lbl_file     = StatusChip("")
         self._lbl_file.setVisible(False)
         self._lbl_unsaved  = QLabel("")
-        from ui.design_system import get_design_system, FontSize
-        _p = get_design_system().palette
         self._lbl_unsaved.setStyleSheet(
-            f"color: {_p.warning}; font-size: {FontSize.XS}px; padding: 0 6px; background-color: transparent;"
+            f"color: {StatusBarColors.ACCENT_WARNING}; font-size: {FontSize.XS}px; padding: 0 6px; background-color: transparent; font-weight: 500;"
         )
 
         self.addWidget(self._lbl_ai)
@@ -95,7 +119,6 @@ class BottomStatusBar(QStatusBar):
         self.addWidget(self._lbl_ws)
         self.addWidget(_separator_label())
         self.addWidget(self._lbl_branch)
-        # Provider and file chips share one separator — both hidden until active
         self._sep_provider = _separator_label()
         self._sep_provider.setVisible(False)
         self.addWidget(self._sep_provider)
@@ -106,10 +129,8 @@ class BottomStatusBar(QStatusBar):
         self.addWidget(self._lbl_file)
         self.addWidget(self._lbl_unsaved)
 
-        # ── Right section (permanent) ─────────────────────────────────────
         self._lbl_cursor = StatusChip("Ln 1, Col 1")
         self._lbl_lang   = StatusChip("Plain Text")
-        self._lbl_indent = StatusChip("Spaces: 4")
         self._lbl_ver    = StatusChip("v1.9")
 
         self.addPermanentWidget(_separator_label())
@@ -119,7 +140,6 @@ class BottomStatusBar(QStatusBar):
         self.addPermanentWidget(_separator_label())
         self.addPermanentWidget(self._lbl_ver)
         
-        # Workspace metadata chips
         self._lbl_project_name = StatusChip("")
         self._lbl_project_name.setVisible(False)
         self._lbl_files = StatusChip("")
@@ -213,66 +233,56 @@ class BottomStatusBar(QStatusBar):
 
     def _on_task_started(self, data):
         self._lbl_ai.setText("● AI: Thinking")
+        self._lbl_ai.set_color(StatusBarColors.TEXT_PRIMARY)
         self._lbl_ai.set_accent(True)
 
     def _on_task_done(self, data):
         self._lbl_ai.setText("● AI: Idle")
+        self._lbl_ai.set_color(StatusBarColors.TEXT_SECONDARY)
         self._lbl_ai.set_accent(False)
 
     def _on_task_failed(self, data):
-        from ui.design_system import get_design_system, FontSize
-        p = get_design_system().palette
         self._lbl_ai.setText("● AI: Error")
-        self._lbl_ai.setStyleSheet(
-            f"color: {p.error}; background-color: transparent; font-size: {FontSize.XS}px; padding: 0 6px;"
-        )
+        self._lbl_ai.set_color(StatusBarColors.ACCENT_ERROR)
+        self._lbl_ai.set_accent(True)
 
     def _on_provider_changed(self, data: dict):
         """Handle provider change event."""
-        from ui.design_system import get_design_system, FontSize
-        p = get_design_system().palette
         provider = data.get("provider")
         status = data.get("status", "unknown")
 
         if provider and status == "connected":
             self._lbl_provider.setText(f"● {provider.upper()}")
-            self._lbl_provider.setStyleSheet(
-                f"color: {p.success}; background-color: transparent; font-size: {FontSize.XS}px; padding: 0 6px; font-weight: 500;"
-            )
+            self._lbl_provider.set_color(StatusBarColors.ACCENT_SUCCESS)
+            self._lbl_provider.set_accent(True)
             self._lbl_provider.setVisible(True)
             self._sep_provider.setVisible(True)
         elif provider:
             self._lbl_provider.setText(f"● {provider.upper()}")
-            self._lbl_provider.setStyleSheet(
-                f"color: {p.error}; background-color: transparent; font-size: {FontSize.XS}px; padding: 0 6px; font-weight: 500;"
-            )
+            self._lbl_provider.set_color(StatusBarColors.ACCENT_ERROR)
+            self._lbl_provider.set_accent(True)
             self._lbl_provider.setVisible(True)
             self._sep_provider.setVisible(True)
         else:
             self._lbl_provider.setVisible(False)
             self._sep_provider.setVisible(False)
 
-
     def _on_model_changed(self, data: dict):
         """Handle model change event."""
-        from ui.design_system import get_design_system, FontSize
-        p = get_design_system().palette
         model = data.get("model")
         provider = data.get("provider")
 
         if model:
             provider_name = provider.upper() if provider else "Unknown"
             self._lbl_provider.setText(f"● {provider_name}: {model}")
-            self._lbl_provider.setStyleSheet(
-                f"color: {p.accent}; background-color: transparent; font-size: {FontSize.XS}px; padding: 0 6px; font-weight: 500;"
-            )
+            self._lbl_provider.set_color(StatusBarColors.TEXT_PRIMARY)
+            self._lbl_provider.set_accent(True)
             self._lbl_provider.setVisible(True)
             self._sep_provider.setVisible(True)
         elif provider:
             self._lbl_provider.setText(f"● {provider.upper()}")
-            self._lbl_provider.setStyleSheet(
-                f"color: {p.accent}; background-color: transparent; font-size: {FontSize.XS}px; padding: 0 6px; font-weight: 500;"
-            )
+            self._lbl_provider.set_color(StatusBarColors.TEXT_SECONDARY)
+            self._lbl_provider.set_accent(False)
             self._lbl_provider.setVisible(True)
             self._sep_provider.setVisible(True)
 

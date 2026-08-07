@@ -16,7 +16,7 @@ Features:
 """
 
 from PySide6.QtWidgets import (
-    QToolBar, QToolButton, QWidget, QHBoxLayout, QLabel, QSizePolicy, QFrame, QMenu, QPushButton
+    QToolBar, QToolButton, QWidget, QHBoxLayout, QLabel, QSizePolicy, QFrame, QMenu, QPushButton, QLineEdit
 )
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtCore import Qt, Signal, QSize
@@ -29,7 +29,7 @@ def _create_separator() -> QFrame:
     f = QFrame()
     f.setFrameShape(QFrame.VLine)
     f.setFixedWidth(1)
-    f.setFixedHeight(18)
+    f.setFixedHeight(16)
     f.setStyleSheet(f"color: {p.border_subtle}; background-color: {p.border_subtle}; margin: 0 4px;")
     return f
 
@@ -53,11 +53,11 @@ class ToolButton(QToolButton):
                 color: {p.text_secondary};
                 border: none;
                 border-radius: {Radius.SM}px;
-                padding: {Spacing.SM}px {Spacing.LG}px;
+                padding: {Spacing.XS + 1}px {Spacing.MD}px;
                 font-size: {FontSize.SM}px;
                 font-weight: {FontWeight.MEDIUM};
-                min-width: 26px;
-                min-height: 26px;
+                min-width: 32px;
+                min-height: 28px;
             }}
             QToolButton:hover {{
                 background-color: {p.surface_hover};
@@ -73,24 +73,24 @@ class ToolButton(QToolButton):
             QToolButton::menu-indicator {{
                 subcontrol-origin: padding;
                 subcontrol-position: center right;
-                padding-right: 4px;
+                padding-right: 3px;
                 image: none;
                 width: 0;
                 height: 0;
                 border-left: 3px solid transparent;
                 border-right: 3px solid transparent;
-                border-top: 4px solid {p.text_tertiary};
+                border-top: 3px solid {p.text_tertiary};
             }}
             QToolButton::menu-indicator:hover {{
-                border-top-color: {p.text};
+                border-top-color: {p.text_secondary};
             }}
         """)
 
 
 class ModelBadge(QWidget):
     """
-    Compact model indicator shown in the toolbar right section.
-    Shows: ● ModelName  [token budget]
+    Elegant model indicator badge - matches reference design.
+    Format: ● AI Model-Name
     """
     clicked = Signal()
 
@@ -98,32 +98,30 @@ class ModelBadge(QWidget):
         super().__init__()
         self.setObjectName("ModelBadge")
         self.setCursor(Qt.PointingHandCursor)
-        self.setToolTip("Active AI model — click to switch")
+        self.setToolTip("Active AI model — click to configure")
 
-        from ui.design_system import get_design_system, Radius, Spacing, FontSize
+        from ui.design_system import get_design_system, Radius, Spacing, FontSize, FontWeight
         p = get_design_system().palette
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 4, 8, 4)
-        layout.setSpacing(8)
+        layout.setContentsMargins(10, 5, 10, 5)
+        layout.setSpacing(6)
 
+        # Status indicator dot
         self._dot = QLabel("●")
-        self._dot.setStyleSheet(f"color: {p.success}; font-size: 8px; background-color: transparent;")
+        self._dot.setStyleSheet(f"color: {p.success}; font-size: 9px; background-color: transparent;")
 
-        self._model_name = QLabel("No Model")
+        # Model name label - more prominent
+        self._model_name = QLabel("No AI Model")
         self._model_name.setStyleSheet(f"""
-            color: {p.text_secondary};
-            font-size: {FontSize.XS}px;
-            font-weight: 500;
+            color: {p.text};
+            font-size: {FontSize.SM}px;
+            font-weight: {FontWeight.MEDIUM};
             background-color: transparent;
         """)
 
-        self._token_lbl = QLabel("")
-        self._token_lbl.setStyleSheet(f"color: {p.text_tertiary}; font-size: {FontSize.XS}px; background-color: transparent;")
-
         layout.addWidget(self._dot)
         layout.addWidget(self._model_name)
-        layout.addWidget(self._token_lbl)
 
         self.setStyleSheet(f"""
             #ModelBadge {{
@@ -131,6 +129,7 @@ class ModelBadge(QWidget):
                 border: 1px solid {p.border};
                 border-radius: {Radius.MD}px;
                 padding: 0px;
+                min-height: 28px;
             }}
             #ModelBadge:hover {{
                 border-color: {p.border_hover};
@@ -141,44 +140,90 @@ class ModelBadge(QWidget):
     def set_model(self, name: str, active: bool = True):
         from ui.design_system import get_design_system
         p = get_design_system().palette
-        self._model_name.setText(name)
+        # Format: show provider + model
+        display_name = name if name else "No Model"
+        self._model_name.setText(display_name)
         self._dot.setStyleSheet(
-            f"color: {p.success if active else p.text_tertiary}; font-size: 8px; background-color: transparent;"
+            f"color: {p.success if active else p.text_disabled}; font-size: 9px; background-color: transparent;"
         )
 
     def set_tokens(self, used: int, limit: int):
-        if limit > 0:
-            pct = int(used / limit * 100)
-            self._token_lbl.setText(f"{pct}%")
+        # Remove token display from badge (too cluttered)
+        pass
 
     def mousePressEvent(self, event):
         self.clicked.emit()
 
 
-class WorkspaceStatus(QLabel):
-    """Compact workspace path/name label in toolbar."""
+class WorkspaceStatus(QWidget):
+    """Professional workspace badge with icon - matches reference design."""
     def __init__(self):
-        super().__init__("No Workspace")
-        from ui.design_system import get_design_system, FontSize
+        super().__init__()
+        from ui.design_system import get_design_system, Radius, Spacing, FontSize, FontWeight
         p = get_design_system().palette
-        self.setStyleSheet(f"""
+        
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(10, 5, 10, 5)
+        layout.setSpacing(6)
+        
+        # Folder icon
+        self._icon = QLabel("📁")
+        self._icon.setStyleSheet("font-size: 13px; background-color: transparent;")
+        layout.addWidget(self._icon)
+        
+        # Workspace name
+        self._label = QLabel("No Workspace")
+        self._label.setStyleSheet(f"""
             color: {p.text_tertiary};
-            font-size: {FontSize.XS}px;
+            font-size: {FontSize.SM}px;
+            font-weight: {FontWeight.MEDIUM};
             background-color: transparent;
-            padding: 0 8px;
         """)
-        self.setMaximumWidth(220)
+        layout.addWidget(self._label)
+        
+        self.setStyleSheet(f"""
+            QWidget {{
+                background-color: {p.surface};
+                border: 1px solid {p.border};
+                border-radius: {Radius.MD}px;
+                min-height: 28px;
+            }}
+            QWidget:hover {{
+                border-color: {p.border_hover};
+                background-color: {p.surface_hover};
+            }}
+        """)
+        self.setCursor(Qt.PointingHandCursor)
+        self.setToolTip("Current workspace — click to open folder")
+        self.setMaximumWidth(200)
 
     def set_workspace(self, name: str):
-        from ui.design_system import get_design_system, FontSize
+        from ui.design_system import get_design_system, FontSize, FontWeight
         p = get_design_system().palette
-        self.setText(name)
-        self.setStyleSheet(f"""
-            color: {p.text_secondary};
-            font-size: {FontSize.XS}px;
-            background-color: transparent;
-            padding: 0 8px;
-        """)
+        
+        # Truncate if too long
+        display_name = name if len(name) <= 24 else name[:21] + "..."
+        
+        if name == "No Workspace":
+            self._label.setText(name)
+            self._label.setStyleSheet(f"""
+                color: {p.text_tertiary};
+                font-size: {FontSize.SM}px;
+                font-weight: {FontWeight.MEDIUM};
+                background-color: transparent;
+            """)
+        else:
+            self._label.setText(display_name)
+            self._label.setStyleSheet(f"""
+                color: {p.text};
+                font-size: {FontSize.SM}px;
+                font-weight: {FontWeight.MEDIUM};
+                background-color: transparent;
+            """)
+    
+    def mousePressEvent(self, event):
+        # Could emit signal to open folder dialog
+        pass
 
 
 class TopToolbar(QToolBar):
@@ -228,26 +273,32 @@ class TopToolbar(QToolBar):
         self.setup_ui()
     
     def setup_ui(self):
-        """Build professional toolbar with frequently-used actions."""
-        from ui.design_system import get_design_system, Spacing
+        """Build professional toolbar matching IDE reference design."""
+        from ui.design_system import get_design_system, Spacing, Radius, FontSize
         p = get_design_system().palette
         
-        # Set consistent toolbar styling
         self.setStyleSheet(f"""
             QToolBar {{
-                background-color: {p.toolbar};
+                background-color: {p.bg_secondary};
                 border: none;
-                border-bottom: 1px solid {p.border};
-                spacing: {Spacing.SM}px;
-                padding: {Spacing.XS}px {Spacing.MD}px;
-                min-height: 36px;
+                border-bottom: 1px solid {p.border_subtle};
+                spacing: {Spacing.XS}px;
+                padding: 0 {Spacing.MD}px;
+                min-height: 40px;
+                max-height: 40px;
             }}
             QToolButton {{
-                min-width: 32px;
-                min-height: 30px;
-                padding: 4px 10px;
+                min-width: 28px;
+                min-height: 28px;
+                padding: 3px 8px;
             }}
         """)
+        
+        # ── Window Controls Spacer (for traffic light buttons alignment) ──
+        title_spacer = QWidget()
+        title_spacer.setFixedWidth(72)
+        title_spacer.setStyleSheet("background-color: transparent;")
+        self.addWidget(title_spacer)
         
         # ── File Actions ────────────────────────────────────────────────
         self._add_file_actions()
@@ -264,11 +315,94 @@ class TopToolbar(QToolBar):
         # ── AI Actions ──────────────────────────────────────────────────
         self._add_ai_actions()
         
-        # ── Spacer for right-aligned elements ───────────────────────────
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        spacer.setStyleSheet("background-color: transparent;")
-        self.addWidget(spacer)
+        # ── Left spacer before search field ─────────────────────────────
+        left_spacer = QWidget()
+        left_spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        left_spacer.setStyleSheet("background-color: transparent;")
+        self.addWidget(left_spacer)
+        
+        # ── Centered Search in Project Field ────────────────────────────
+        search_wrap = QWidget()
+        search_wrap.setStyleSheet("background-color: transparent;")
+        search_layout = QHBoxLayout(search_wrap)
+        search_layout.setContentsMargins(0, 0, 0, 0)
+        search_layout.setSpacing(0)
+        search_wrap.setFixedWidth(360)
+        search_wrap.setMinimumWidth(240)
+        search_wrap.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
+        
+        search_icon = QLabel("🔍")
+        search_icon.setAlignment(Qt.AlignCenter)
+        search_icon.setStyleSheet(f"""
+            QLabel {{
+                background-color: {p.surface};
+                color: {p.text_tertiary};
+                border: 1px solid {p.border};
+                border-right: none;
+                border-top-left-radius: {Radius.MD}px;
+                border-bottom-left-radius: {Radius.MD}px;
+                padding: 0 {Spacing.SM}px 0 {Spacing.MD}px;
+                font-size: 12px;
+            }}
+        """)
+        search_layout.addWidget(search_icon)
+        
+        self.search_field = QLineEdit()
+        self.search_field.setPlaceholderText("Search in project")
+        self.search_field.returnPressed.connect(self.search_requested.emit)
+        self.search_field.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {p.surface};
+                color: {p.text};
+                border: 1px solid {p.border};
+                border-left: none;
+                border-right: none;
+                border-top-left-radius: 0px;
+                border-bottom-left-radius: 0px;
+                border-top-right-radius: 0px;
+                border-bottom-right-radius: 0px;
+                padding: {Spacing.XS + 2}px {Spacing.SM}px;
+                font-size: {FontSize.SM}px;
+                selection-background-color: {p.selection};
+                min-height: 20px;
+            }}
+            QLineEdit:hover {{
+                border-color: {p.border_hover};
+            }}
+            QLineEdit:focus {{
+                border-color: {p.accent};
+            }}
+        """)
+        search_layout.addWidget(self.search_field, 1)
+        
+        kbd_label = QLabel("⌘K")
+        kbd_label.setAlignment(Qt.AlignCenter)
+        kbd_label.setStyleSheet(f"""
+            QLabel {{
+                background-color: {p.surface};
+                color: {p.text_tertiary};
+                border: 1px solid {p.border};
+                border-left: none;
+                border-top-right-radius: {Radius.MD}px;
+                border-bottom-right-radius: {Radius.MD}px;
+                padding: 0 {Spacing.MD}px 0 {Spacing.XS}px;
+                font-size: {FontSize.XXS}px;
+                font-weight: 600;
+            }}
+        """)
+        search_layout.addWidget(kbd_label)
+        
+        self.addWidget(search_wrap)
+        
+        # ── Right spacer after search ───────────────────────────────────
+        right_spacer = QWidget()
+        right_spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        right_spacer.setStyleSheet("background-color: transparent;")
+        self.addWidget(right_spacer)
+        
+        # ── Editor Actions (subtle toolbar) ─────────────────────────────
+        self._add_editor_actions()
+        self.addWidget(_create_separator())
         
         # ── Right Section: Status Indicators ────────────────────────────
         self._add_status_section()
@@ -372,6 +506,62 @@ class TopToolbar(QToolBar):
         btn_ai_menu.setMenu(menu)
         btn_ai_menu.setPopupMode(QToolButton.InstantPopup)
         self.addWidget(btn_ai_menu)
+    
+    def _add_editor_actions(self):
+        """Add editor layout/window actions matching reference design."""
+        # Split Editor button
+        btn_split = ToolButton("⊞")
+        btn_split.setToolTip("Split Editor Right")
+        btn_split.clicked.connect(lambda: self.view_action_requested.emit("split_editor"))
+        self.addWidget(btn_split)
+        
+        # Editor Layout / View menu
+        btn_layout = ToolButton("⋯")
+        btn_layout.setToolTip("More Editor Actions")
+        
+        layout_menu = QMenu(btn_layout)
+        layout_menu.addAction("Split Editor Right").triggered.connect(
+            lambda: self.view_action_requested.emit("split_right")
+        )
+        layout_menu.addAction("Split Editor Down").triggered.connect(
+            lambda: self.view_action_requested.emit("split_down")
+        )
+        layout_menu.addSeparator()
+        layout_menu.addAction("Minimap").triggered.connect(
+            lambda: self.view_action_requested.emit("toggle_minimap")
+        )
+        layout_menu.addAction("Breadcrumbs").triggered.connect(
+            lambda: self.view_action_requested.emit("toggle_breadcrumbs")
+        )
+        layout_menu.addAction("Word Wrap").triggered.connect(
+            lambda: self.view_action_requested.emit("toggle_wordwrap")
+        )
+        layout_menu.addSeparator()
+        layout_menu.addAction("Command Palette… (Ctrl+Shift+P)").triggered.connect(
+            self.command_palette_requested.emit
+        )
+        btn_layout.setMenu(layout_menu)
+        btn_layout.setPopupMode(QToolButton.InstantPopup)
+        self.addWidget(btn_layout)
+        
+        # Settings button
+        btn_settings = ToolButton("⚙")
+        btn_settings.setToolTip("Settings and more")
+        
+        settings_menu = QMenu(btn_settings)
+        settings_menu.addAction("Color Theme").triggered.connect(
+            lambda: self.theme_change_requested.emit("menu")
+        )
+        settings_menu.addAction("Keyboard Shortcuts (Ctrl+K Ctrl+S)").triggered.connect(
+            lambda: self.view_action_requested.emit("shortcuts")
+        )
+        settings_menu.addSeparator()
+        settings_menu.addAction("Settings (Ctrl+,)").triggered.connect(
+            lambda: self.view_action_requested.emit("settings")
+        )
+        btn_settings.setMenu(settings_menu)
+        btn_settings.setPopupMode(QToolButton.InstantPopup)
+        self.addWidget(btn_settings)
     
     def _add_status_section(self):
         """Add right-aligned status indicators."""

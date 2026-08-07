@@ -11,7 +11,7 @@ Complete AI chat interface with:
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QScrollArea, QLabel,
-    QPushButton, QFrame, QComboBox, QTextEdit, QMessageBox, QSizePolicy, QGridLayout
+    QPushButton, QFrame, QComboBox, QTextEdit, QMessageBox, QSizePolicy, QGridLayout, QToolButton
 )
 from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QFont
@@ -21,51 +21,87 @@ from ui.ai_workspace.intelligent_error_handler import ConnectionStatusWidget
 
 
 class MessageWidget(QWidget):
-    """A single message bubble."""
+    """A single premium message bubble — avatar + card layout matching reference."""
     def __init__(self, text: str, is_user: bool):
         super().__init__()
         self.setup_ui(text, is_user)
-        
+
     def setup_ui(self, text: str, is_user: bool):
-        from ui.design_system import get_design_system
+        from ui.design_system import get_design_system, Radius, Spacing, FontSize
         p = get_design_system().palette
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 6, 8, 6)
-        layout.setSpacing(4)
+        outer = QHBoxLayout(self)
+        outer.setContentsMargins(Spacing.MD, 4, Spacing.MD, 4)
+        outer.setSpacing(Spacing.SM)
+        outer.setAlignment(Qt.AlignTop)
 
-        # Role label
-        role = "You" if is_user else "Assistant"
-        role_color = p.accent if is_user else p.success
+        # ── Avatar ───────────────────────────────────────────────────────
+        avatar = QLabel("👤" if is_user else "🤖")
+        avatar.setFixedSize(28, 28)
+        avatar.setAlignment(Qt.AlignCenter)
+        avatar.setStyleSheet(f"""
+            QLabel {{
+                background-color: {p.surface if is_user else p.accent + '33'};
+                color: {'#FFFFFF' if not is_user else p.text};
+                border: 1px solid {p.border};
+                border-radius: 14px;
+                font-size: 13px;
+                font-weight: 600;
+            }}
+        """)
+        outer.addWidget(avatar, 0, Qt.AlignTop)
+
+        # ── Message Column (role + card) ─────────────────────────────────
+        col_wrap = QWidget()
+        col_layout = QVBoxLayout(col_wrap)
+        col_layout.setContentsMargins(0, 0, 0, 0)
+        col_layout.setSpacing(3)
+
+        role = "You" if is_user else "AI Assistant"
+        role_color = p.accent if is_user else p.text
 
         role_lbl = QLabel(role)
         role_lbl.setStyleSheet(f"""
             color: {role_color};
-            font-size: 10px;
-            font-weight: 600;
+            font-size: {FontSize.XXS}px;
+            font-weight: 700;
             background-color: transparent;
-            padding-bottom: 4px;
+            letter-spacing: 0.2px;
         """)
-        layout.addWidget(role_lbl)
+        col_layout.addWidget(role_lbl)
 
-        # Message text
+        # ── Message Card ─────────────────────────────────────────────────
+        card = QFrame()
+        card.setObjectName("MessageCard")
+        card_bg = p.bg_secondary if is_user else p.surface
+        card_border = p.border
+
+        card.setStyleSheet(f"""
+            QFrame#MessageCard {{
+                background-color: {card_bg};
+                border: 1px solid {card_border};
+                border-radius: {Radius.LG}px;
+            }}
+        """)
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.MD, Spacing.SM)
+        card_layout.setSpacing(0)
+
         text_lbl = QLabel(text)
         text_lbl.setObjectName("msg_body")
         text_lbl.setWordWrap(True)
         text_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.LinksAccessibleByMouse)
         text_lbl.setOpenExternalLinks(True)
-        
-        bg_color = p.surface_active if is_user else p.surface
-        text_color = p.text if is_user else p.text_secondary
-        
         text_lbl.setStyleSheet(f"""
-            color: {text_color};
-            font-size: 12px;
-            background-color: {bg_color};
-            padding: 8px 10px;
-            border-radius: 6px;
+            color: {p.text};
+            font-size: {FontSize.SM}px;
+            background-color: transparent;
+            line-height: 1.5;
         """)
-        layout.addWidget(text_lbl)
+        card_layout.addWidget(text_lbl)
+        col_layout.addWidget(card)
+
+        outer.addWidget(col_wrap, 1)
 
 
 class AIChatPanel(QWidget):
@@ -114,16 +150,105 @@ class AIChatPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        
-        # ── Top Controls ──────────────────────────────────────────────────
-        self._setup_controls(layout)
-        
+
+        from ui.design_system import get_design_system, Spacing, Radius, FontSize
+        p = get_design_system().palette
+
+        self.setStyleSheet(f"""
+            AIChatPanel {{
+                background-color: {p.bg};
+            }}
+        """)
+
+        # ── Subtle Conversation Header ────────────────────────────────────
+        header = QWidget()
+        header.setObjectName("AIChatHeader")
+        header.setStyleSheet(f"""
+            background-color: {p.bg_secondary};
+            border-bottom: 1px solid {p.border_subtle};
+        """)
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.SM, Spacing.SM)
+        header_layout.setSpacing(Spacing.XS)
+
+        # Avatar / greeting
+        greeting_wrap = QHBoxLayout()
+        greeting_wrap.setSpacing(Spacing.SM)
+        avatar = QLabel("👩‍💻")
+        avatar.setFixedSize(36, 36)
+        avatar.setAlignment(Qt.AlignCenter)
+        avatar.setStyleSheet(f"""
+            background-color: {p.surface};
+            border: 1px solid {p.border};
+            border-radius: 18px;
+            font-size: 16px;
+        """)
+        greeting_wrap.addWidget(avatar)
+
+        greeting_col = QVBoxLayout()
+        greeting_col.setSpacing(0)
+        greeting_title = QLabel("AI Assistant")
+        greeting_title.setStyleSheet(f"""
+            color: {p.text};
+            font-size: {FontSize.SM}px;
+            font-weight: 600;
+            background: transparent;
+        """)
+        greeting_sub = QLabel("How can I help you build today?")
+        greeting_sub.setStyleSheet(f"""
+            color: {p.text_tertiary};
+            font-size: {FontSize.XS}px;
+            background: transparent;
+        """)
+        greeting_col.addWidget(greeting_title)
+        greeting_col.addWidget(greeting_sub)
+        greeting_wrap.addLayout(greeting_col)
+        greeting_wrap.addStretch(1)
+        header_layout.addLayout(greeting_wrap, 1)
+
+        # Right: subtle action buttons (New Chat, Clear, Settings)
+        def header_btn(icon, tip):
+            b = QToolButton()
+            b.setText(icon)
+            b.setToolTip(tip)
+            b.setFixedSize(28, 28)
+            b.setStyleSheet(f"""
+                QToolButton {{
+                    background-color: transparent;
+                    color: {p.text_tertiary};
+                    border: none;
+                    border-radius: {Radius.SM}px;
+                    font-size: 13px;
+                    padding: 0;
+                }}
+                QToolButton:hover {{
+                    background-color: {p.surface_hover};
+                    color: {p.text};
+                }}
+                QToolButton:pressed {{
+                    background-color: {p.surface_active};
+                    color: {p.text};
+                }}
+            """)
+            return b
+
+        btn_new = header_btn("＋", "New Chat (Ctrl+N)")
+        btn_new.clicked.connect(self._on_new_chat)
+        btn_clear = header_btn("⟲", "Clear Chat")
+        btn_clear.clicked.connect(self._on_clear_chat)
+        btn_settings = header_btn("⚙", "AI Settings")
+        header_layout.addWidget(btn_new)
+        header_layout.addWidget(btn_clear)
+        header_layout.addWidget(btn_settings)
+
+        layout.addWidget(header)
+
         # ── Conversation Area ─────────────────────────────────────────────
         self._setup_conversation(layout)
-        
+
         # ── Bottom Input ──────────────────────────────────────────────────
         self._setup_input(layout)
-        
+
         # Show welcome message
         self._show_welcome()
         
@@ -282,174 +407,277 @@ class AIChatPanel(QWidget):
         parent_layout.addWidget(self._scroll)
         
     def _setup_input(self, parent_layout):
-        """Setup input area with buttons."""
-        from ui.design_system import get_design_system
+        """
+        Setup clean professional input area (reference design):
+        — Provider/Model, Context selector (row above input)
+        — Large multiline editor + rounded send button
+        — Subtle status indicator in corner (hidden unless active)
+        """
+        from ui.design_system import get_design_system, Radius, Spacing, FontSize
         p = get_design_system().palette
-        # Button row
-        btn_row = QWidget()
-        btn_row.setStyleSheet(f"background-color: {p.bg_secondary}; border-top: 1px solid {p.border_subtle};")
-        btn_layout = QHBoxLayout(btn_row)
-        btn_layout.setContentsMargins(8, 8, 8, 8)
-        btn_layout.setSpacing(8)
-        
-        self._btn_new = QPushButton("New Chat")
-        self._btn_clear = QPushButton("Clear Chat")
-        
-        button_style = f"""
-            QPushButton {{
+
+        # ── Container ────────────────────────────────────────────────────
+        container = QWidget()
+        container.setObjectName("AIChatInputContainer")
+        container.setStyleSheet(f"""
+            background-color: {p.bg_secondary};
+            border-top: 1px solid {p.border_subtle};
+        """)
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(Spacing.MD, Spacing.SM, Spacing.MD, Spacing.MD)
+        layout.setSpacing(Spacing.SM)
+
+        # ── Row 1: Provider + Model + Context + subtle status ────────────
+        top_row = QHBoxLayout()
+        top_row.setSpacing(Spacing.SM)
+
+        # Provider selector (compact — keeps existing logic working)
+        self._provider_combo = QComboBox()
+        self._provider_combo.addItem("Automatic", "automatic")
+        self._provider_combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
+        self._provider_combo.setMinimumContentsLength(6)
+        self._provider_combo.setToolTip("AI Provider")
+        self._provider_combo.setMinimumHeight(28)
+        self._provider_combo.setStyleSheet(f"""
+            QComboBox {{
+                background-color: {p.surface};
+                color: {p.text_secondary};
+                border: 1px solid {p.border};
+                border-radius: {Radius.MD}px;
+                padding: 0 {Spacing.SM}px 0 {Spacing.SM}px;
+                font-size: {FontSize.XS}px;
+                font-weight: 500;
+                min-height: 28px;
+            }}
+            QComboBox:hover {{
+                border-color: {p.border_hover};
+                background-color: {p.surface_hover};
+            }}
+            QComboBox::drop-down {{ border: none; width: 14px; }}
+            QComboBox::down-arrow {{
+                image: none;
+                border-left: 3px solid transparent;
+                border-right: 3px solid transparent;
+                border-top: 3px solid {p.text_tertiary};
+                width: 0; height: 0;
+                margin-right: 2px;
+            }}
+        """)
+        self._provider_combo.currentTextChanged.connect(self._on_provider_changed)
+        top_row.addWidget(self._provider_combo, 0)
+
+        # Model selector dropdown (beautiful, compact)
+        self._model_combo = QComboBox()
+        self._model_combo.setMinimumHeight(28)
+        self._model_combo.addItem("Automatic")
+        self._model_combo.setToolTip("AI Model — click to change")
+        self._model_combo.setStyleSheet(f"""
+            QComboBox {{
                 background-color: {p.surface};
                 color: {p.text};
                 border: 1px solid {p.border};
-                border-radius: 4px;
-                padding: 4px 10px;
-                font-size: 11px;
+                border-radius: {Radius.MD}px;
+                padding: 0 {Spacing.MD}px 0 {Spacing.MD}px;
+                font-size: {FontSize.XS}px;
+                font-weight: 600;
+                min-height: 28px;
+            }}
+            QComboBox:hover {{
+                border-color: {p.border_hover};
+                background-color: {p.surface_hover};
+            }}
+            QComboBox::drop-down {{ border: none; width: 16px; }}
+            QComboBox::down-arrow {{
+                image: none;
+                border-left: 3px solid transparent;
+                border-right: 3px solid transparent;
+                border-top: 3px solid {p.text_tertiary};
+                width: 0; height: 0;
+                margin-right: 4px;
+            }}
+        """)
+        self._model_combo.currentTextChanged.connect(self._on_model_changed)
+        top_row.addWidget(self._model_combo, 0)
+
+        # Context chip button
+        self._btn_context = QToolButton()
+        self._btn_context.setText("⊙  Context")
+        self._btn_context.setToolTip("Attach workspace context / files")
+        self._btn_context.setCursor(Qt.PointingHandCursor)
+        self._btn_context.setMinimumHeight(28)
+        self._btn_context.setStyleSheet(f"""
+            QToolButton {{
+                background-color: {p.surface};
+                color: {p.text_secondary};
+                border: 1px solid {p.border};
+                border-radius: {Radius.MD}px;
+                padding: 0 {Spacing.MD}px;
+                font-size: {FontSize.XS}px;
                 font-weight: 500;
             }}
-            QPushButton:hover {{
+            QToolButton:hover {{
                 background-color: {p.surface_hover};
-                border-color: {p.border_hover};
+                border-color: {p.accent};
+                color: {p.accent};
             }}
-            QPushButton:pressed {{
+            QToolButton:pressed {{
                 background-color: {p.surface_active};
             }}
-        """
-        
-        self._btn_new.setStyleSheet(button_style)
-        self._btn_clear.setStyleSheet(button_style)
-        
-        self._btn_new.clicked.connect(self._on_new_chat)
-        self._btn_clear.clicked.connect(self._on_clear_chat)
-        
-        btn_layout.addWidget(self._btn_new)
-        btn_layout.addWidget(self._btn_clear)
-        btn_layout.addStretch()
-        
-        parent_layout.addWidget(btn_row)
-        
-        # Input row
-        input_frame = QWidget()
-        input_frame.setStyleSheet(f"background-color: {p.bg_secondary}; border-top: 1px solid {p.border_subtle};")
-        input_layout = QHBoxLayout(input_frame)
-        input_layout.setContentsMargins(8, 8, 8, 8)
-        input_layout.setSpacing(8)
+        """)
+        top_row.addWidget(self._btn_context, 0)
+
+        top_row.addStretch(1)
+
+        # Latency label (keeps existing logic happy)
+        self._latency_lbl = QLabel("")
+        self._latency_lbl.setStyleSheet(f"color: {p.text_tertiary}; font-size: {FontSize.XXS}px;")
+        top_row.addWidget(self._latency_lbl, 0, Qt.AlignRight)
+
+        # Status indicator
+        self._status_indicator = QLabel("● Connected")
+        self._status_indicator.setWordWrap(True)
+        self._status_indicator.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self._status_indicator.setStyleSheet(f"color: {p.success}; font-size: {FontSize.XXS}px;")
+        top_row.addWidget(self._status_indicator, 0, Qt.AlignRight)
+
+        layout.addLayout(top_row)
+
+        # ── Row 2: Multiline Input + Send Button ─────────────────────────
+        input_row = QHBoxLayout()
+        input_row.setSpacing(Spacing.SM)
 
         self._input = QTextEdit()
-        self._input.setPlaceholderText("Type a message… (Enter to send, Shift+Enter for new line)")
-        self._input.setMinimumHeight(36)
-        self._input.setMaximumHeight(80)
-        self._input.setStyleSheet("""
-            QTextEdit {
-                background-color: #1C1C1F;
-                border: 1px solid #252528;
-                border-radius: 6px;
-                padding: 8px 10px;
-                color: #E2E2E6;
-                font-size: 12px;
-            }
-            QTextEdit:focus {
-                border-color: #3B82F6;
-            }
-        """)
-        
-        # Install event filter for Enter key
+        self._input.setPlaceholderText("Ask anything… (Enter to send, Shift+Enter for new line)")
+        self._input.setMinimumHeight(64)
+        self._input.setMaximumHeight(160)
         self._input.installEventFilter(self)
+        self._input.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {p.surface};
+                color: {p.text};
+                border: 1px solid {p.border};
+                border-radius: {Radius.LG}px;
+                padding: {Spacing.MD}px {Spacing.MD}px;
+                font-size: {FontSize.MD}px;
+                selection-background-color: {p.selection};
+            }}
+            QTextEdit:hover {{
+                border-color: {p.border_hover};
+            }}
+            QTextEdit:focus {{
+                border-color: {p.accent};
+                background-color: {p.bg};
+            }}
+        """)
+        input_row.addWidget(self._input, 1)
 
-        self._btn_send = QPushButton("Send")
-        self._btn_send.setMinimumSize(56, 32)
-        self._btn_send.setMaximumWidth(70)
-        self._btn_send.setStyleSheet("""
-            QPushButton {
-                background-color: #3B82F6;
+        # Rounded accent send button
+        self._btn_send = QPushButton("➤")
+        self._btn_send.setToolTip("Send Message (Enter)")
+        self._btn_send.setCursor(Qt.PointingHandCursor)
+        self._btn_send.setFixedSize(40, 40)
+        self._btn_send.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {p.accent};
                 color: #FFFFFF;
                 border: none;
-                border-radius: 6px;
-                font-size: 12px;
-                font-weight: 600;
-                padding: 4px 10px;
-            }
-            QPushButton:hover { background-color: #2563EB; }
-            QPushButton:pressed { background-color: #1D4ED8; }
-            QPushButton:disabled { background-color: #252528; color: #52525C; }
+                border-radius: 20px;
+                font-size: 14px;
+                font-weight: 700;
+                padding: 0;
+            }}
+            QPushButton:hover {{
+                background-color: {p.accent_hover};
+            }}
+            QPushButton:pressed {{
+                background-color: {p.accent_active};
+            }}
+            QPushButton:disabled {{
+                background-color: {p.surface};
+                color: {p.text_disabled};
+                border: 1px solid {p.border};
+            }}
         """)
         self._btn_send.clicked.connect(self._send)
-        
-        self._btn_stop = QPushButton("Stop")
-        self._btn_stop.setMinimumSize(56, 32)
-        self._btn_stop.setMaximumWidth(70)
-        self._btn_stop.setStyleSheet("""
-            QPushButton {
-                background-color: #EF4444;
+
+        # Stop button (hidden by default)
+        self._btn_stop = QPushButton("■")
+        self._btn_stop.setToolTip("Stop Generation")
+        self._btn_stop.setCursor(Qt.PointingHandCursor)
+        self._btn_stop.setFixedSize(40, 40)
+        self._btn_stop.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {p.error};
                 color: #FFFFFF;
                 border: none;
-                border-radius: 6px;
+                border-radius: 20px;
                 font-size: 12px;
-                font-weight: 600;
-                padding: 4px 10px;
-            }
-            QPushButton:hover { background-color: #DC2626; }
-            QPushButton:pressed { background-color: #B91C1C; }
+                font-weight: 700;
+                padding: 0;
+            }}
+            QPushButton:hover {{
+                background-color: #D43F38;
+            }}
+            QPushButton:pressed {{
+                background-color: #B8332D;
+            }}
         """)
         self._btn_stop.clicked.connect(self._on_stop)
         self._btn_stop.hide()
 
-        # Quick Actions Bar — two rows of 4 buttons so they always fit
-        from PySide6.QtWidgets import QGridLayout
-        quick_actions = QWidget()
-        quick_actions.setStyleSheet(f"""
-            background-color: {p.bg_secondary};
-            border-bottom: 1px solid {p.border_subtle};
-        """)
-        qa_grid = QGridLayout(quick_actions)
-        qa_grid.setContentsMargins(8, 6, 8, 6)
-        qa_grid.setSpacing(6)
+        send_wrap = QVBoxLayout()
+        send_wrap.setContentsMargins(0, 0, 0, 0)
+        send_wrap.setSpacing(0)
+        send_wrap.addStretch(1)
+        send_wrap.addWidget(self._btn_send, 0, Qt.AlignBottom)
+        send_wrap.addWidget(self._btn_stop, 0, Qt.AlignBottom)
+        input_row.addLayout(send_wrap)
+
+        layout.addLayout(input_row)
+
+        # ── Subtle Quick Action pill row ──────────────────────────────────
+        qa_row = QHBoxLayout()
+        qa_row.setSpacing(6)
 
         action_names = [
-            ("Explain", "Explain the selected code or current file"),
-            ("Review",  "Review the code for issues"),
-            ("Fix",     "Fix any issues in the code"),
-            ("Refactor","Refactor the code"),
-            ("Document","Generate documentation for the code"),
-            ("Test",    "Generate tests for the code"),
-            ("Optimize","Optimize the code"),
-            ("Commit",  "Generate a commit message"),
+            ("Explain",  "Explain selected code"),
+            ("Fix",      "Fix issues in code"),
+            ("Refactor", "Refactor code"),
+            ("Test",     "Generate tests"),
         ]
-
-        btn_style = f"""
+        qa_style = f"""
             QPushButton {{
-                background-color: {p.surface};
+                background-color: transparent;
                 color: {p.text_tertiary};
                 border: 1px solid {p.border_subtle};
-                border-radius: 4px;
-                padding: 4px 6px;
-                font-size: 10px;
+                border-radius: 12px;
+                padding: 3px {Spacing.SM}px;
+                font-size: {FontSize.XXS}px;
                 font-weight: 500;
             }}
             QPushButton:hover {{
                 background-color: {p.surface_hover};
                 color: {p.text};
-                border-color: {p.border_hover};
+                border-color: {p.border};
             }}
             QPushButton:pressed {{
                 background-color: {p.surface_active};
-                color: {p.text};
             }}
         """
+        for name, tip in action_names:
+            b = QPushButton(name)
+            b.setStyleSheet(qa_style)
+            b.setToolTip(tip)
+            b.setCursor(Qt.PointingHandCursor)
+            b.clicked.connect(lambda checked, n=name: self._on_quick_action(n))
+            qa_row.addWidget(b)
+        qa_row.addStretch(1)
+        layout.addLayout(qa_row)
 
-        for i, (name, tooltip) in enumerate(action_names):
-            btn = QPushButton(name)
-            btn.setStyleSheet(btn_style)
-            btn.setToolTip(tooltip)
-            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-            btn.clicked.connect(lambda checked, n=name: self._on_quick_action(n))
-            row, col = divmod(i, 4)
-            qa_grid.addWidget(btn, row, col)
+        parent_layout.addWidget(container)
 
-        parent_layout.addWidget(quick_actions)
-        
-        input_layout.addWidget(self._input)
-        input_layout.addWidget(self._btn_send)
-        input_layout.addWidget(self._btn_stop)
-        parent_layout.addWidget(input_frame)
+        # Initialize model/provider
+        self._on_provider_changed("Automatic")
         
     def eventFilter(self, obj, event):
         """Handle Enter key for sending."""
@@ -539,8 +767,8 @@ class AIChatPanel(QWidget):
         
         # Immediately update UI to show loading
         self._model_combo.clear()
-        self._model_combo.addItem("Loading models...", "")
-        self._update_status("Connecting to providers...", "info")
+        self._model_combo.addItem("Loading...", "")
+        self._update_status("Connecting...", "info")
         
         if self.chat_engine:
             # Always start background refresh first — it will call models_updated when done
@@ -556,8 +784,8 @@ class AIChatPanel(QWidget):
                 logger.warning(f"Could not do initial model_combo populate: {e}")
         else:
             self._model_combo.clear()
-            self._model_combo.addItem("AI engine initializing...", "")
-            self._update_status("AI engine initializing...", "info")
+            self._model_combo.addItem("Initializing...", "")
+            self._update_status("Initializing...", "info")
 
     def _populate_model_combo(self, provider, all_models_info):
         from core.logger import setup_logger
@@ -616,10 +844,10 @@ class AIChatPanel(QWidget):
                     selected_model = self._model_combo.currentData()
                     logger.info(f"Auto-selected first available model: {selected_model}")
                 
-                self._update_status(f"Ready: {len(available_models)} models available", "success")
+                self._update_status(f"Ready: {len(available_models)} models", "success")
             else:
-                self._model_combo.addItem("No active models available", "")
-                self._update_status("No active models available", "warning")
+                self._model_combo.addItem("No models available", "")
+                self._update_status("No models available", "warning")
         else:
             provider_models = []
             for model_id, model_info in all_models_info.items():
@@ -661,8 +889,8 @@ class AIChatPanel(QWidget):
                 
                 self._update_status(f"Ready: {provider}", "success")
             else:
-                self._model_combo.addItem("No active models for this provider", "")
-                self._update_status("No active models for this provider", "warning")
+                self._model_combo.addItem("No models for provider", "")
+                self._update_status("No models for provider", "warning")
 
     def _start_provider_refresh_background(self):
         """Start background thread to refresh providers and models"""
@@ -826,6 +1054,7 @@ class AIChatPanel(QWidget):
         }
         color = colors.get(status, "#52525C")
         self._status_indicator.setText(f"● {message}")
+        self._status_indicator.setToolTip(message)
         self._status_indicator.setStyleSheet(f"color: {color}; font-size: 11px;")
         
     def _send(self):
@@ -1139,7 +1368,7 @@ Configure your AI provider in Settings to enable real conversations."""
         
         # Update status to show connected
         if chat_engine:
-            self._update_status("AI engine connected", "success")
+            self._update_status("AI connected", "success")
             logger.info("AI Chat Engine connected successfully")
             
             # Populate the provider combo from provider registry

@@ -47,7 +47,7 @@ from ui.ai_workspace.ai_engineering_workspace_v3 import AIEngineeringWorkspaceV3
 from ui.enhanced_explorer import PremiumActivityBar, PremiumSidebarHeader, PremiumExplorer
 from ui.command_palette import CommandPalette
 from ui.notifications import create_notification_manager
-from ui.bottom_dock import DOCK_DEFAULT_HEIGHT
+from ui.bottom_dock import DOCK_DEFAULT_HEIGHT, DOCK_MIN_HEIGHT
 from ui.design_system import Sidebar
 
 logger = setup_logger(__name__)
@@ -61,7 +61,8 @@ class MainWindow(QMainWindow):
             self._theme_manager = None  # set by main.py after app creation
 
             self.setWindowTitle("MyCodingMaster")
-            self.setMinimumSize(1024, 680)
+            self.setMinimumSize(1280, 800)  # Larger minimum for professional IDE layout
+            self.resize(1600, 1000)  # Better default size
             self.setDockOptions(
                 QMainWindow.AnimatedDocks |
                 QMainWindow.AllowNestedDocks |
@@ -96,6 +97,10 @@ class MainWindow(QMainWindow):
                 self.event_bus.subscribe("workspace_error",           self._on_workspace_error)
                 self.event_bus.subscribe("notification_show",         self._on_notification_show)
                 self.event_bus.subscribe("show_open_folder",          self._show_open_folder)
+                self.event_bus.subscribe("ai_toggle_requested",       lambda _d: self.toggle_ai_panel())
+                self.event_bus.subscribe("ai_panel_hide_requested",   lambda _d: self._hide_ai_panel())
+                self.event_bus.subscribe("ai_panel_show_requested",   lambda _d: self._show_ai_panel())
+                self.event_bus.subscribe("ai_panel_fullscreen_requested", lambda _d: self._toggle_ai_fullscreen())
                 # Dashboard lives in center panel — wire after setup_ui() creates center
                 self.center.dashboard.open_recent_requested.connect(self.handle_open_project)
 
@@ -356,9 +361,10 @@ class MainWindow(QMainWindow):
             # --- AI PANEL ---
             with ProfilePhase("ai_panel_init"):
                 self.ai_workspace = AIEngineeringWorkspaceV3(self.event_bus)
-                self.ai_workspace.setMinimumWidth(280)
-                self.ai_workspace.setMaximumWidth(520)
+                self.ai_workspace.setMinimumWidth(320)  # Updated to match new MIN_WIDTH
+                self.ai_workspace.setMaximumWidth(600)  # Updated to match new MAX_WIDTH
                 self._top_splitter.addWidget(self.ai_workspace)
+                self._top_splitter.setStretchFactor(2, 0)  # AI panel doesn't auto-stretch
 
             # --- TERMINAL (Bottom in same splitter hierarchy) ---
             with ProfilePhase("bottom_panel_init"):
@@ -410,10 +416,14 @@ class MainWindow(QMainWindow):
                     self._explorer.setVisible(False)
                     self._top_splitter.setHandleWidth(0)
                     self._activity_bar.set_collapsed(True)
-                    # Set splitter sizes to give all space to editor
+                    # Set 3-element splitter sizes: give editor majority, keep AI panel
                     total_width = self._top_splitter.width()
                     if total_width > 0:
-                        self._top_splitter.setSizes([0, total_width])
+                        ai_width = min(380, max(280, int(total_width * 0.25)))
+                        editor_width = total_width - ai_width
+                        self._top_splitter.setSizes([0, editor_width, ai_width])
+                    # Use deferred sizing in case width is 0
+                    QTimer.singleShot(0, self._apply_deferred_sizes_hidden)
                 else:
                     # Show with saved activity and allow resizing
                     self._explorer.setMinimumWidth(Sidebar.MIN_WIDTH)
@@ -421,10 +431,15 @@ class MainWindow(QMainWindow):
                     self._explorer.setVisible(True)
                     self._top_splitter.setHandleWidth(6)
                     self._activity_bar.set_active_activity(self._active_activity)
-                    # Set proper splitter sizes
+                    # Set 3-element splitter sizes with professional 18/57/25 proportions
                     total_width = self._top_splitter.width()
                     if total_width > 0:
-                        self._top_splitter.setSizes([self._sidebar_width, total_width - self._sidebar_width])
+                        sidebar_w = max(Sidebar.MIN_WIDTH, min(Sidebar.MAX_WIDTH, int(total_width * 0.18)))
+                        ai_w = max(280, min(520, int(total_width * 0.25)))
+                        editor_w = total_width - sidebar_w - ai_w
+                        self._top_splitter.setSizes([sidebar_w, editor_w, ai_w])
+                    # Deferred fallback for initial size=0 case with 18/57/25 defaults
+                    QTimer.singleShot(0, self._apply_ide_default_sizes)
 
     def toggle_explorer(self):
         """Toggle sidebar visibility via Ctrl+B."""
@@ -534,20 +549,75 @@ class MainWindow(QMainWindow):
     
     def toggle_ai_panel(self):
         """Toggle AI panel visibility."""
-        is_visible = self.ai_workspace.isVisible()
-        if is_visible:
-            self._ai_panel_width = max(240, self.ai_workspace.width())
-            self.ai_workspace.setVisible(False)
+        if self.ai_workspace.isVisible():
+            self._hide_ai_panel()
         else:
-            self.ai_workspace.setVisible(True)
-            sizes = self._top_splitter.sizes()
-            ai_w = getattr(self, "_ai_panel_width", max(240, min(380, int(self.width() * 0.25))))
-            if len(sizes) == 3:
-                available = max(0, sum(sizes) - ai_w)
-                sizes[1] = max(240, available - max(180, sizes[0]))
-                sizes[2] = ai_w
-                self._top_splitter.setSizes(sizes)
-        logger.info(f"AI panel {'hidden' if is_visible else 'shown'}")
+            self._show_ai_panel()
+    
+    def _hide_ai_panel(self):
+        """Hide AI panel and expand editor to fill the space."""
+        if not self.ai_workspace.isVisible():
+            return
+        
+        # Save current width before hiding
+        self._ai_panel_width = max(320, self.ai_workspace.width())
+        
+        # Hide the AI workspace
+        self.ai_workspace.setVisible(False)
+        
+        # Reflow layout: give AI panel's space to the editor
+        sizes = self._top_splitter.sizes()
+        if len(sizes) == 3:
+            sidebar_w, editor_w, ai_w = sizes
+            # Give all AI space to editor
+            new_editor_w = editor_w + ai_w
+            self._top_splitter.setSizes([sidebar_w, new_editor_w, 0])
+        
+        logger.info("AI panel hidden")
+    
+    def _show_ai_panel(self):
+        """Show AI panel and resize layout proportionally."""
+        if self.ai_workspace.isVisible():
+            return
+        
+        # Show the AI workspace
+        self.ai_workspace.setVisible(True)
+        
+        # Reflow layout: take space from editor for AI panel
+        sizes = self._top_splitter.sizes()
+        if len(sizes) == 3:
+            sidebar_w, editor_w, _ = sizes
+            # Restore AI panel width (or use default 30% of workspace)
+            total_w = sidebar_w + editor_w
+            ai_w = getattr(self, "_ai_panel_width", max(380, min(600, int(total_w * 0.30))))
+            new_editor_w = max(400, total_w - ai_w)
+            
+            self._top_splitter.setSizes([sidebar_w, new_editor_w, ai_w])
+        
+        logger.info("AI panel shown")
+    
+    def _toggle_ai_fullscreen(self):
+        """Toggle AI panel between normal and fullscreen mode."""
+        # Check if AI panel is already in fullscreen
+        is_fullscreen = getattr(self, '_ai_fullscreen_mode', False)
+        
+        sizes = self._top_splitter.sizes()
+        if len(sizes) != 3:
+            return
+        
+        if not is_fullscreen:
+            # Enter fullscreen: hide sidebar and editor, show only AI
+            self._ai_fullscreen_sizes = sizes  # Save current sizes
+            total_w = sum(sizes)
+            self._top_splitter.setSizes([0, 0, total_w])
+            self._ai_fullscreen_mode = True
+            logger.info("AI panel fullscreen ON")
+        else:
+            # Exit fullscreen: restore previous sizes
+            if hasattr(self, '_ai_fullscreen_sizes'):
+                self._top_splitter.setSizes(self._ai_fullscreen_sizes)
+            self._ai_fullscreen_mode = False
+            logger.info("AI panel fullscreen OFF")
 
     def _toggle_dock(self):
         """Toggle bottom dock visibility."""
@@ -868,25 +938,71 @@ class MainWindow(QMainWindow):
             self._initial_sizes_applied = True
             if not getattr(self, "_layout_restored", False):
                 self._apply_default_layout_sizes()
+    
+    def _apply_deferred_sizes_hidden(self):
+        """Deferred sizing when sidebar is hidden on startup."""
+        if not self._sidebar_visible and self._top_splitter:
+            sizes = self._top_splitter.sizes()
+            if len(sizes) >= 3:
+                total_width = sum(sizes)
+                if total_width > 0:
+                    ai_width = min(400, max(320, int(total_width * 0.27)))
+                    editor_width = total_width - ai_width
+                    self._top_splitter.setSizes([0, editor_width, ai_width])
+    
+    def _apply_ide_default_sizes(self):
+        """Apply default IDE sizing when sidebar is visible on startup."""
+        if self._sidebar_visible and self._top_splitter:
+            sizes = self._top_splitter.sizes()
+            if len(sizes) >= 3:
+                total_width = sum(sizes)
+                if total_width > 0:
+                    sidebar_w = max(Sidebar.MIN_WIDTH, min(Sidebar.MAX_WIDTH, int(total_width * 0.18)))
+                    ai_w = max(320, min(600, int(total_width * 0.27)))
+                    editor_w = total_width - sidebar_w - ai_w
+                    self._top_splitter.setSizes([sidebar_w, editor_w, ai_w])
 
     def _apply_default_layout_sizes(self):
-        """Set sidebar/editor/AI proportions based on actual window width."""
+        """Set sidebar/editor/AI proportions based on actual window width.
+        
+        Target proportions (excluding activity bar):
+          Sidebar 18%, Editor 57%, AI 25%
+        
+        Bottom dock EXPANDED by default to show terminal.
+        """
         w = self.width()
         h = self.height()
         if w <= 0 or h <= 0:
             return
         
-        explorer_w = self._sidebar_width if self._sidebar_visible else 0
-        ai_w = max(240, min(380, int(w * 0.25)))
-        editor_w = max(320, w - self._activity_bar.width() - explorer_w - ai_w)
+        # Workspace width = total width - activity bar fixed width
+        activity_w = self._activity_bar.width()
+        workspace_w = max(1, w - activity_w)
+        
+        # Target proportions: 18% sidebar, 55% editor, 27% AI (adjusted for larger AI panel)
+        if self._sidebar_visible:
+            explorer_w = max(Sidebar.MIN_WIDTH, min(Sidebar.MAX_WIDTH, int(workspace_w * 0.18)))
+        else:
+            explorer_w = 0
+        
+        # AI workspace gets more space (30% instead of 27% for better initial view)
+        ai_w = max(380, min(600, int(workspace_w * 0.30)))
+        
+        # Editor gets the remaining space
+        editor_w = max(400, workspace_w - explorer_w - ai_w)
 
         if hasattr(self, "_top_splitter"):
             self._top_splitter.setSizes([max(0, explorer_w), editor_w, ai_w])
 
-        terminal_h = 180
-        top_h = max(240, h - terminal_h)
+        # Bottom dock: EXPANDED by default to show terminal (220px)
+        terminal_h = 220  # Good default height for terminal visibility
+        top_h = max(400, h - terminal_h)
         if hasattr(self, "_workspace_splitter"):
             self._workspace_splitter.setSizes([top_h, terminal_h])
+        
+        # Make sure bottom dock starts EXPANDED
+        if getattr(self._bottom_widget, '_collapsed', True) and not getattr(self, '_layout_restored', False):
+            QTimer.singleShot(50, self._bottom_widget.expand)
         
     def _save_layout(self):
         settings = QSettings("MyCodingMaster", "MainWindow")
@@ -900,11 +1016,19 @@ class MainWindow(QMainWindow):
         settings = QSettings("MyCodingMaster", "MainWindow")
         # Clear old window/state that may have QDockWidget info
         settings.remove("window/state")
+        
+        # FORCE RESET: Always start with terminal expanded (ignore saved state)
+        settings.setValue("layout/terminal_collapsed", False)
+        
         geometry = settings.value("window/geometry")
         main_splitter_state = settings.value("layout/main_splitter")
         top_splitter_state = settings.value("layout/top_splitter")
         ai_visible = settings.value("layout/ai_visible", True, type=bool)
-        terminal_collapsed = settings.value("layout/terminal_collapsed", False, type=bool)
+        terminal_collapsed = False  # ALWAYS FALSE - terminal always starts expanded
+        
+        # DEBUG OUTPUT
+        print(f"[DEBUG] _load_layout: FORCING terminal_collapsed=False (was {settings.value('layout/terminal_collapsed')})")
+        
         if geometry:
             self.restoreGeometry(geometry)
         
@@ -914,12 +1038,23 @@ class MainWindow(QMainWindow):
         elif not self._sidebar_visible:
             # Set splitter to give all space to editor if sidebar is hidden
             QTimer.singleShot(100, self._apply_hidden_sidebar_layout)
-        if main_splitter_state:
-            self._workspace_splitter.restoreState(main_splitter_state)
+        
+        # DON'T restore main splitter state on first load - use defaults instead
+        # This ensures terminal starts expanded as designed
+        # if main_splitter_state:
+        #     self._workspace_splitter.restoreState(main_splitter_state)
         
         self.ai_workspace.setVisible(ai_visible)
+        
+        # Handle terminal state: always expand on fresh start, only collapse if explicitly saved
         if terminal_collapsed:
+            print("[DEBUG] Collapsing terminal (from saved state)")
             self._bottom_widget.collapse()
+        else:
+            # Force expanded state with proper height (override any restored splitter state)
+            print("[DEBUG] Forcing terminal expanded")
+            QTimer.singleShot(100, lambda: self._force_terminal_expanded())
+        
         self._layout_restored = bool(top_splitter_state or main_splitter_state)
     
     def _apply_hidden_sidebar_layout(self):
@@ -928,6 +1063,24 @@ class MainWindow(QMainWindow):
             total_width = self._top_splitter.width()
             if total_width > 0:
                 self._top_splitter.setSizes([0, total_width])
+    
+    def _force_terminal_expanded(self):
+        """Force terminal to be expanded with proper height."""
+        print(f"[DEBUG] _force_terminal_expanded called, collapsed={getattr(self._bottom_widget, '_collapsed', 'unknown')}")
+        if self._workspace_splitter and not getattr(self._bottom_widget, '_collapsed', False):
+            sizes = self._workspace_splitter.sizes()
+            print(f"[DEBUG] Current workspace splitter sizes: {sizes}")
+            if len(sizes) == 2:
+                total_h = sum(sizes)
+                if total_h > 0:
+                    terminal_h = 220  # Force expanded height
+                    top_h = max(400, total_h - terminal_h)
+                    print(f"[DEBUG] Setting workspace splitter sizes to: [{top_h}, {terminal_h}]")
+                    self._workspace_splitter.setSizes([top_h, terminal_h])
+                    # Make tabs visible
+                    self._bottom_widget._tabs.setVisible(True)
+                    self._bottom_widget.toolbar.setVisible(True)
+                    print(f"[DEBUG] Terminal expanded! New sizes: {self._workspace_splitter.sizes()}")
             
     def _reset_layout(self):
         """Restore default panel proportions."""

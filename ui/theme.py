@@ -48,38 +48,44 @@ QWidget {{
 }}
 
 /* ── Activity Bar (Premium IDE style) ─────────────────────────────── */
-QWidget#ActivityBar {{
+QWidget#ActivityBar, QWidget#PremiumActivityBar {{
     background-color: {p.bg_secondary};
     border-right: 1px solid {p.border_subtle};
 }}
 
-QWidget#ActivityBar QPushButton {{
+QWidget#ActivityBar QPushButton,
+QWidget#PremiumActivityBar QPushButton {{
     background-color: transparent;
     color: {p.text_tertiary};
     border: none;
     border-radius: {Radius.SM}px;
-    font-size: 18px;
-    min-width: 40px;
-    min-height: 40px;
-    max-width: 40px;
-    max-height: 40px;
+    font-size: 16px;
+    min-width: 36px;
+    min-height: 36px;
+    max-width: 36px;
+    max-height: 36px;
     margin: 2px 0;
 }}
 
-QWidget#ActivityBar QPushButton:hover {{
+QWidget#ActivityBar QPushButton:hover,
+QWidget#PremiumActivityBar QPushButton:hover {{
     background-color: {p.surface_hover};
     color: {p.text};
 }}
 
-QWidget#ActivityBar QPushButton:pressed {{
+QWidget#ActivityBar QPushButton:pressed,
+QWidget#PremiumActivityBar QPushButton:pressed {{
     background-color: {p.surface_active};
 }}
 
-QWidget#ActivityBar QPushButton:checked {{
-    background-color: {p.surface_active};
+QWidget#ActivityBar QPushButton:checked,
+QWidget#PremiumActivityBar QPushButton:checked {{
+    background-color: {p.surface};
     color: {p.accent};
     border-left: 2px solid {p.accent};
-    border-radius: {Radius.SM}px;
+    border-radius: 0px {Radius.SM}px {Radius.SM}px 0px;
+    margin-left: 0px;
+    padding-left: 2px;
 }}
 
 /* ── Sidebar ──────────────────────────────────────────────────────── */
@@ -88,7 +94,7 @@ QWidget#PremiumExplorer {{
 }}
 
 QWidget#PremiumExplorer QWidget {{
-    background-color: {p.bg_secondary};
+    background-color: {p.sidebar};
 }}
 
 QWidget#PremiumExplorer QSplitter::handle {{
@@ -107,7 +113,7 @@ QWidget#PremiumExplorer QSplitter::handle:horizontal {{
 QWidget#SidebarHeader {{
     background-color: {p.bg_secondary};
     border-bottom: 1px solid {p.border_subtle};
-    padding: 0 {Spacing.MD}px;
+    padding: 0 {Spacing.SM}px;
 }}
 
 QWidget#SidebarHeader QToolButton {{
@@ -115,12 +121,12 @@ QWidget#SidebarHeader QToolButton {{
     color: {p.text_tertiary};
     border: none;
     border-radius: {Radius.SM}px;
-    font-size: 16px;
-    min-width: 28px;
-    min-height: 28px;
-    max-width: 28px;
-    max-height: 28px;
-    padding: 4px;
+    font-size: 14px;
+    min-width: 24px;
+    min-height: 24px;
+    max-width: 24px;
+    max-height: 24px;
+    padding: 2px;
 }}
 
 QWidget#SidebarHeader QToolButton:hover {{
@@ -141,11 +147,11 @@ QMainWindow::separator:hover {{
 
 /* ── Menu Bar ─────────────────────────────────────────────────────── */
 QMenuBar {{
-    background-color: {p.toolbar};
+    background-color: {p.bg_secondary};
     color: {p.text_secondary};
     border: none;
-    border-bottom: 1px solid {p.border};
-    padding: 2px {Spacing.SM}px;
+    border-bottom: 1px solid {p.border_subtle};
+    padding: 0 {Spacing.SM}px;
     font-size: {FontSize.SM}px;
     min-height: 30px;
     max-height: 30px;
@@ -153,9 +159,9 @@ QMenuBar {{
 
 QMenuBar::item {{
     background-color: transparent;
-    padding: {Spacing.SM}px {Spacing.LG}px;
+    padding: {Spacing.XS}px {Spacing.SM}px;
     border-radius: {Radius.SM}px;
-    margin: 0 2px;
+    margin: 2px 1px;
 }}
 
 QMenuBar::item:selected {{
@@ -200,19 +206,19 @@ QMenu::icon {{
 
 /* ── Toolbar ──────────────────────────────────────────────────────── */
 QToolBar#TopToolbar {{
-    background-color: {p.toolbar};
+    background-color: {p.bg_secondary};
     border: none;
-    border-bottom: 1px solid {p.border};
+    border-bottom: 1px solid {p.border_subtle};
     spacing: {Spacing.XS}px;
-    padding: 0 {Spacing.MD}px;
-    min-height: 38px;
-    max-height: 38px;
+    padding: 0 {Spacing.SM}px;
+    min-height: 36px;
+    max-height: 36px;
 }}
 
 QToolBar {{
-    background-color: {p.toolbar};
+    background-color: {p.bg_secondary};
     border: none;
-    border-bottom: 1px solid {p.border};
+    border-bottom: 1px solid {p.border_subtle};
     spacing: {Spacing.XS}px;
     padding: 0 {Spacing.SM}px;
 }}
@@ -220,7 +226,7 @@ QToolBar {{
 QToolBar::separator {{
     background-color: {p.border_subtle};
     width: 1px;
-    margin: {Spacing.SM}px {Spacing.SM}px;
+    margin: {Spacing.SM}px {Spacing.XS}px;
 }}
 
 QToolButton {{
@@ -228,7 +234,7 @@ QToolButton {{
     color: {p.text_secondary};
     border: none;
     border-radius: {Radius.SM}px;
-    padding: {Spacing.SM}px {Spacing.LG}px;
+    padding: {Spacing.XS}px {Spacing.SM}px;
     font-size: {FontSize.SM}px;
     font-weight: {FontWeight.MEDIUM};
     min-height: 28px;
@@ -248,39 +254,6 @@ QToolButton:checked {{
     color: {p.text};
 }}
 
-/* ── Activity Bar ─────────────────────────────────────────────────── */
-#ActivityBar {{
-    background-color: {p.bg_secondary};
-    border-right: 1px solid {p.border_subtle};
-}}
-
-#ActivityBar QPushButton {{
-    background-color: transparent;
-    color: {p.text_tertiary};
-    border: none;
-    border-radius: {Radius.LG}px;
-    font-size: 16px;
-    min-width: 36px;
-    min-height: 36px;
-    max-width: 36px;
-    max-height: 36px;
-}}
-
-#ActivityBar QPushButton:hover {{
-    background-color: {p.surface_hover};
-    color: {p.text};
-}}
-
-#ActivityBar QPushButton:pressed {{
-    background-color: {p.surface_active};
-}}
-
-/* ── Sidebar ──────────────────────────────────────────────────────── */
-#SidebarHeader {{
-    background-color: {p.bg_secondary};
-    border-bottom: 1px solid {p.border};
-}}
-
 /* ── Editor Tab Bar ───────────────────────────────────────────────── */
 QTabWidget::pane {{
     border: none;
@@ -293,11 +266,11 @@ QTabBar {{
 }}
 
 QTabBar::tab {{
-    background-color: {p.bg_secondary};
+    background-color: transparent;
     color: {p.text_tertiary};
     border: none;
     border-right: 1px solid {p.border_subtle};
-    padding: 0px 16px;
+    padding: 0px {Spacing.LG}px 0px {Spacing.MD}px;
     font-size: {FontSize.SM}px;
     font-weight: {FontWeight.REGULAR};
     min-height: 36px;
@@ -314,16 +287,17 @@ QTabBar::tab:selected {{
     color: {p.text};
     font-weight: {FontWeight.MEDIUM};
     border-bottom: 2px solid {p.accent};
+    border-right: 1px solid {p.border_subtle};
 }}
 
 QTabBar::close-button {{
     image: none;
     subcontrol-position: right;
-    padding: 3px;
+    padding: 2px;
     margin-right: 4px;
     border-radius: {Radius.SM}px;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 }}
 
 QTabBar::close-button:hover {{
@@ -331,36 +305,88 @@ QTabBar::close-button:hover {{
 }}
 
 QTabBar::tab:pinned {{
-    font-weight: {FontWeight.BOLD};
+    font-weight: {FontWeight.SEMIBOLD};
 }}
 
-/* ── Status Bar ───────────────────────────────────────────────────── */
-QStatusBar#BottomStatusBar {{
-    background-color: {p.statusbar};
-    color: {p.text_secondary};
-    border-top: 1px solid {p.border};
+/* ── Status Bar (Premium Purple — matches reference design) ──────── */
+QStatusBar#BottomStatusBar,
+QStatusBar {{
+    background-color: #4C1D95;
+    color: #E9D5FF;
+    border-top: 1px solid rgba(0,0,0,0.25);
     font-size: {FontSize.XS}px;
+    font-weight: 500;
     min-height: 24px;
     max-height: 24px;
     padding: 0 {Spacing.SM}px;
 }}
 
+QStatusBar::item,
 QStatusBar#BottomStatusBar::item {{
     border: none;
 }}
 
-QStatusBar {{
-    background-color: {p.statusbar};
-    color: {p.text_secondary};
-    border-top: 1px solid {p.border};
+QStatusBar QLabel,
+QStatusBar#BottomStatusBar QLabel,
+QStatusBar StatusChip,
+QStatusBar#BottomStatusBar StatusChip {{
+    color: #E9D5FF;
+    background-color: transparent;
     font-size: {FontSize.XS}px;
-    min-height: 24px;
-    max-height: 24px;
+    font-weight: 500;
+}}
+
+QStatusBar StatusChip[accent="true"],
+QStatusBar QStatusChip[accent="true"],
+QStatusBar#BottomStatusBar StatusChip[accent="true"] {{
+    color: #FFFFFF;
+    font-weight: 600;
+}}
+
+QStatusBar QLabel:hover {{
+    background-color: rgba(255,255,255,0.08);
+    border-radius: {Radius.SM}px;
+}}
+
+/* ── Breadcrumb Navigation Bar ────────────────────────────────────── */
+BreadcrumbNavigation,
+QWidget#BreadcrumbNavigation {{
+    background-color: {p.bg_secondary};
+    border-bottom: 1px solid {p.border_subtle};
+    min-height: 28px;
+    max-height: 28px;
+}}
+
+BreadcrumbNavigation QToolButton,
+QWidget#BreadcrumbNavigation QToolButton {{
+    background-color: transparent;
+    color: {p.text_tertiary};
+    border: none;
+    border-radius: {Radius.SM}px;
+    padding: 2px {Spacing.SM}px;
+    font-size: {FontSize.XS}px;
+    font-weight: 500;
+    min-height: 20px;
+}}
+
+BreadcrumbNavigation QToolButton:hover,
+QWidget#BreadcrumbNavigation QToolButton:hover {{
+    background-color: {p.surface_hover};
+    color: {p.text};
+}}
+
+BreadcrumbNavigation QLabel,
+QWidget#BreadcrumbNavigation QLabel {{
+    color: {p.text_tertiary};
+    background-color: transparent;
+    font-size: {FontSize.XS}px;
     padding: 0 {Spacing.XS}px;
 }}
 
-QStatusBar::item {{
-    border: none;
+BreadcrumbNavigation QLabel[role="last"],
+QWidget#BreadcrumbNavigation QLabel[role="last"] {{
+    color: {p.text};
+    font-weight: 600;
 }}
 
 /* ── Dock Widget ──────────────────────────────────────────────────── */
@@ -374,8 +400,8 @@ QDockWidget {{
 QDockWidget::title {{
     background-color: {p.bg_secondary};
     color: {p.text_secondary};
-    padding: {Spacing.SM}px {Spacing.MD}px;
-    border-bottom: 1px solid {p.border};
+    padding: {Spacing.XS}px {Spacing.SM}px;
+    border-bottom: 1px solid {p.border_subtle};
     font-size: {FontSize.XS}px;
     font-weight: {FontWeight.SEMIBOLD};
     text-align: left;
@@ -431,8 +457,8 @@ QPushButton {{
     background-color: {p.surface};
     color: {p.text_secondary};
     border: 1px solid {p.border};
-    border-radius: {Radius.MD}px;
-    padding: {Spacing.SM}px {Spacing.LG}px;
+    border-radius: {Radius.SM}px;
+    padding: {Spacing.XS}px {Spacing.MD}px;
     font-size: {FontSize.SM}px;
     font-weight: {FontWeight.MEDIUM};
     min-height: 28px;
@@ -488,7 +514,7 @@ QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {{
     border-color: {p.border_focus};
 }}
 
-/* ── Scrollbars — thin, modern, 8px with hover expand feel ───────── */
+/* ── Scrollbars — thin, modern, 8px ──────────────────────────────── */
 QScrollBar:vertical {{
     background-color: transparent;
     width: 8px;
@@ -504,7 +530,6 @@ QScrollBar::handle:vertical {{
 
 QScrollBar::handle:vertical:hover {{
     background-color: {p.border_hover};
-    width: 10px;
 }}
 
 QScrollBar::add-line:vertical,
@@ -532,7 +557,6 @@ QScrollBar::handle:horizontal {{
 
 QScrollBar::handle:horizontal:hover {{
     background-color: {p.border_hover};
-    height: 10px;
 }}
 
 QScrollBar::add-line:horizontal,
@@ -557,7 +581,7 @@ QListView, QTreeView, QListWidget, QTreeWidget {{
 
 QListView::item, QTreeView::item,
 QListWidget::item, QTreeWidget::item {{
-    padding: {Spacing.XS}px {Spacing.MD}px;
+    padding: {Spacing.XS}px {Spacing.SM}px;
     border-radius: {Radius.SM}px;
     border: none;
     min-height: 24px;
@@ -620,17 +644,17 @@ QComboBox QAbstractItemView {{
 /* ── Labels ───────────────────────────────────────────────────────── */
 QLabel {{
     color: {p.text};
-    font-size: {FontSize.MD}px;
+    font-size: {FontSize.SM}px;
     background-color: transparent;
 }}
 
 /* ── Tooltip ──────────────────────────────────────────────────────── */
 QToolTip {{
-    background-color: {p.surface_active};
+    background-color: {p.surface};
     color: {p.text};
     border: 1px solid {p.border};
     border-radius: {Radius.SM}px;
-    padding: 3px {Spacing.SM}px;
+    padding: {Spacing.XS}px {Spacing.SM}px;
     font-size: {FontSize.XS}px;
 }}
 

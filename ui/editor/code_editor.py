@@ -216,7 +216,9 @@ class CodeEditor(QPlainTextEdit):
         extra_selections = []
         if not self.isReadOnly():
             selection = QTextEdit.ExtraSelection()
-            line_color = QColor("#313244")
+            from ui.design_system import get_design_system
+            _p = get_design_system().palette
+            line_color = QColor(_p.surface_hover)
             selection.format.setBackground(line_color)
             selection.format.setProperty(QTextFormat.FullWidthSelection, True)
             selection.cursor = self.textCursor()
@@ -226,7 +228,9 @@ class CodeEditor(QPlainTextEdit):
 
     def line_number_area_paint_event(self, event):
         painter = QPainter(self.line_number_area)
-        painter.fillRect(event.rect(), QColor("#181825"))
+        from ui.design_system import get_design_system
+        _p = get_design_system().palette
+        painter.fillRect(event.rect(), QColor(_p.bg))
         
         block = self.firstVisibleBlock()
         block_number = block.blockNumber()
@@ -236,7 +240,7 @@ class CodeEditor(QPlainTextEdit):
         while block.isValid() and top <= event.rect().bottom():
             if block.isVisible() and bottom >= event.rect().top():
                 number = str(block_number + 1)
-                painter.setPen(QColor("#6C7086"))
+                painter.setPen(QColor(_p.text_tertiary))
                 painter.drawText(0, top, self.line_number_area.width() - 5,
                                  self.fontMetrics().height(),
                                  Qt.AlignRight | Qt.AlignVCenter, number)
@@ -538,7 +542,9 @@ class CodeEditor(QPlainTextEdit):
         # First add the current line highlight
         if not self.isReadOnly():
             selection = QTextEdit.ExtraSelection()
-            line_color = QColor("#313244")
+            from ui.design_system import get_design_system
+            _p = get_design_system().palette
+            line_color = QColor(_p.surface_hover)
             selection.format.setBackground(line_color)
             selection.format.setProperty(QTextFormat.FullWidthSelection, True)
             selection.cursor = self.textCursor()
@@ -581,19 +587,19 @@ class CodeEditor(QPlainTextEdit):
             severity = diag.get("severity", 1)  # 1: Error, 2: Warning, 3: Info, 4: Hint
             if severity == 1:
                 # Red wavy underline for errors
-                selection.format.setUnderlineColor(QColor("#EF4444"))
+                selection.format.setUnderlineColor(QColor(_p.error))
                 selection.format.setUnderlineStyle(QTextFormat.WaveUnderline)
             elif severity == 2:
                 # Yellow wavy underline for warnings
-                selection.format.setUnderlineColor(QColor("#F59E0B"))
+                selection.format.setUnderlineColor(QColor(_p.warning))
                 selection.format.setUnderlineStyle(QTextFormat.WaveUnderline)
             elif severity == 3:
                 # Blue underline for info
-                selection.format.setUnderlineColor(QColor("#60A5FA"))
+                selection.format.setUnderlineColor(QColor(_p.info))
                 selection.format.setUnderlineStyle(QTextFormat.DotLine)
             elif severity == 4:
                 # Purple underline for hints
-                selection.format.setUnderlineColor(QColor("#8B5CF6"))
+                selection.format.setUnderlineColor(QColor(_p.accent))
                 selection.format.setUnderlineStyle(QTextFormat.DotLine)
                 
             extra_selections.append(selection)
@@ -604,7 +610,9 @@ class CodeEditor(QPlainTextEdit):
         """Overridden to include diagnostic underlines."""
         if not self.isReadOnly():
             selection = QTextEdit.ExtraSelection()
-            line_color = QColor("#313244")
+            from ui.design_system import get_design_system
+            _p = get_design_system().palette
+            line_color = QColor(_p.surface_hover)
             selection.format.setBackground(line_color)
             selection.format.setProperty(QTextFormat.FullWidthSelection, True)
             selection.cursor = self.textCursor()

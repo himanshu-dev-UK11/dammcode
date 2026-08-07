@@ -48,89 +48,76 @@ class CommandPalette(QWidget):
         self._current_index = 0
         self._commands = []
         self._is_open = False
-        self.setup_ui()
+        self._parent_window = None
         
-        # Load recent commands
-        self._load_recent_commands()
+        from ui.design_system import get_design_system, Radius, FontSize, Spacing
+        p = get_design_system().palette
         
-        # Setup keyboard shortcuts
-        self._setup_shortcuts()
-        
-        # Event handlers
-        self.event_bus.subscribe("command_executed", self._on_command_executed)
-        
-        # Start hidden
-        self.hide()
-        
-    def setup_ui(self):
         self.setObjectName("CommandPalette")
-        self.setStyleSheet("""
-            #CommandPalette {
-                background-color: #1C1C1F;
-                border: 1px solid #252528;
-                border-radius: 6px;
-            }
+        self.setStyleSheet(f"""
+            #CommandPalette {{
+                background-color: {p.surface};
+                border: 1px solid {p.border};
+                border-radius: {Radius.XL}px;
+            }}
         """)
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
         layout.setSpacing(8)
         
-        # Make palette click-through to close on outside click
         self.setAttribute(Qt.WA_TransparentForMouseEvents, False)
         
-        # Input field
         self._input = QLineEdit()
         self._input.setPlaceholderText("Type a command or search...")
-        self._input.setStyleSheet("""
-            QLineEdit {
-                background-color: #0D0D0F;
-                color: #E2E2E6;
-                border: 1px solid #252528;
-                border-radius: 4px;
+        self._input.setStyleSheet(f"""
+            QLineEdit {{
+                background-color: {p.bg};
+                color: {p.text};
+                border: 1px solid {p.border};
+                border-radius: {Radius.SM}px;
                 padding: 8px 12px;
-                font-size: 13px;
-            }
-            QLineEdit:focus {
-                border-color: #3B82F6;
-            }
+                font-size: {FontSize.MD}px;
+            }}
+            QLineEdit:focus {{
+                border-color: {p.accent};
+            }}
         """)
         self._input.textChanged.connect(self._filter_commands)
         self._input.returnPressed.connect(self._execute_selected)
         self._input.setFocusPolicy(Qt.StrongFocus)
         layout.addWidget(self._input)
         
-        # Command list
         self._list = QListWidget()
-        self._list.setStyleSheet("""
-            QListWidget {
-                background-color: #0D0D0F;
-                border: 1px solid #252528;
-                border-radius: 4px;
-                padding: 4px;
-                font-size: 12px;
-            }
-            QListWidget::item {
+        self._list.setStyleSheet(f"""
+            QListWidget {{
+                background-color: {p.bg};
+                border: 1px solid {p.border};
+                border-radius: {Radius.SM}px;
+                padding: {Spacing.XS}px;
+                font-size: {FontSize.SM}px;
+            }}
+            QListWidget::item {{
                 padding: 6px 10px;
-                min-height: 28px;
-                border-radius: 2px;
-            }
-            QListWidget::item:hover {
-                background-color: #1E3A5F;
-            }
-            QListWidget::item:selected {
-                background-color: #3B82F6;
-                color: white;
-            }
-            QListWidget::item:selected:active {
-                background-color: #2563EB;
-            }
+                min-height: 26px;
+                border-radius: {Radius.SM}px;
+                margin: 1px 2px;
+            }}
+            QListWidget::item:hover {{
+                background-color: {p.surface_hover};
+            }}
+            QListWidget::item:selected {{
+                background-color: {p.accent};
+                color: {p.primary_text};
+            }}
+            QListWidget::item:selected:active {{
+                background-color: {p.accent_active};
+            }}
         """)
         self._list.itemSelectionChanged.connect(self._on_item_selected)
         self._list.itemDoubleClicked.connect(self._execute_selected)
         layout.addWidget(self._list)
         
-        # Recent commands section
         self._recent_section = QWidget()
         self._recent_section.setStyleSheet("background-color: transparent;")
         recent_layout = QVBoxLayout(self._recent_section)
@@ -138,11 +125,11 @@ class CommandPalette(QWidget):
         recent_layout.setSpacing(4)
         
         recent_title = QLabel("RECENT COMMANDS")
-        recent_title.setStyleSheet("""
-            color: #52525C;
+        recent_title.setStyleSheet(f"""
+            color: {p.text_tertiary};
             font-size: 9px;
             font-weight: 600;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.06em;
             background-color: transparent;
             padding: 4px 10px;
         """)
@@ -174,7 +161,6 @@ class CommandPalette(QWidget):
         self._recent_section.setVisible(False)
         layout.addWidget(self._recent_section)
         
-        # Footer with keyboard hints
         footer = QWidget()
         footer.setStyleSheet("background-color: transparent;")
         footer_layout = QHBoxLayout(footer)
@@ -201,11 +187,12 @@ class CommandPalette(QWidget):
         
         layout.addWidget(footer)
         
-        # Initialize commands
+        self._setup_shortcuts()
+        self._load_recent_commands()
         self._build_command_list()
         
-        # Store reference to parent (MainWindow) for focus return
-        self._parent_window = None
+        self.event_bus.subscribe("command_executed", self._on_command_executed)
+        self.hide()
         
     def set_parent_window(self, parent):
         """Store reference to parent window for focus return."""

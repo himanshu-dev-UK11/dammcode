@@ -6,8 +6,9 @@ from PySide6.QtGui import QColor
 
 class ExecutionPlanSection(QWidget):
     """Display the execution plan with phase tracking."""
-    def __init__(self):
+    def __init__(self, event_bus=None):
         super().__init__()
+        self.event_bus = event_bus
         self.setup_ui()
         
     def setup_ui(self):

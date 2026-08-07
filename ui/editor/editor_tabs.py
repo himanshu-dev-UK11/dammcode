@@ -5,7 +5,7 @@ Sticky Tabs, Tab Operations, Split Editor support.
 """
 from pathlib import Path
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QTabWidget, QMenu, QSplitter, QHBoxLayout, QTabBar, QTextEdit
+    QWidget, QVBoxLayout, QTabWidget, QMenu, QSplitter, QHBoxLayout, QTabBar, QTextEdit, QToolButton, QLabel
 )
 from PySide6.QtCore import Qt, Signal, QObject, QRegularExpression
 from PySide6.QtGui import QTextDocument, QTextCursor, QKeySequence, QAction, QShortcut, QColor
@@ -111,7 +111,15 @@ class EditorTabs(QWidget):
         self.breadcrumb.symbol_selected.connect(self._on_symbol_selected)
         editor_layout.addWidget(self.breadcrumb)
 
-        # Tabs widget (premium styling via global QSS + minimal inline customization)
+        # ── Tab + Action Bar Row ─────────────────────────────────────────
+        tab_row = QWidget()
+        tab_row.setObjectName("EditorTabActionBar")
+        tab_row.setStyleSheet("background-color: transparent;")
+        tab_row_layout = QHBoxLayout(tab_row)
+        tab_row_layout.setContentsMargins(0, 0, 0, 0)
+        tab_row_layout.setSpacing(0)
+
+        # Tabs widget (premium styling via global QSS)
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
         self.tabs.setTabsClosable(True)
@@ -120,9 +128,12 @@ class EditorTabs(QWidget):
         self.tabs.setTabBar(EditorTabBar())
         self.tabs.tabBar().setElideMode(Qt.TextElideMode.ElideRight)
         self.tabs.tabBar().setUsesScrollButtons(True)
-        # Tab styling is now primarily driven by ThemeManager global QSS
         self.tabs.setStyleSheet("")
-        editor_layout.addWidget(self.tabs)
+        tab_row_layout.addWidget(self.tabs, 1)
+
+        # ── Editor Action Buttons (right side, matching reference) ──
+        self._setup_tab_actions(tab_row_layout)
+        editor_layout.addWidget(tab_row)
 
         content_splitter.addWidget(self.editor_container)
 
@@ -135,6 +146,113 @@ class EditorTabs(QWidget):
         # Set proportional resize policy
         content_splitter.setStretchFactor(0, 1)
         content_splitter.setStretchFactor(1, 0)
+
+    def _setup_tab_actions(self, parent_layout):
+        """Create subtle editor action toolbar (▶ Run | ⊞ Split | ⋯ More | Settings) matching reference design."""
+        from ui.design_system import get_design_system, Radius, Spacing, FontSize
+        p = get_design_system().palette
+
+        bar = QWidget()
+        bar.setObjectName("EditorTabActions")
+        bar.setStyleSheet(f"background-color: {p.bg_secondary};")
+        bar_layout = QHBoxLayout(bar)
+        bar_layout.setContentsMargins(0, 0, 8, 0)
+        bar_layout.setSpacing(2)
+
+        def make_btn(text, tip):
+            b = QToolButton()
+            b.setText(text)
+            b.setToolTip(tip)
+            b.setCursor(Qt.PointingHandCursor)
+            b.setFixedSize(30, 30)
+            b.setStyleSheet(f"""
+                QToolButton {{
+                    background-color: transparent;
+                    color: {p.text_tertiary};
+                    border: none;
+                    border-radius: {Radius.SM}px;
+                    font-size: 13px;
+                    font-weight: 500;
+                    padding: 0;
+                }}
+                QToolButton:hover {{
+                    background-color: {p.surface_hover};
+                    color: {p.text};
+                }}
+                QToolButton:pressed {{
+                    background-color: {p.surface_active};
+                    color: {p.text};
+                }}
+            """)
+            bar_layout.addWidget(b)
+            return b
+
+        # ── Run button (primary, accent color hover) ──
+        btn_run = QToolButton()
+        btn_run.setText("▶")
+        btn_run.setToolTip("Run File (F5)")
+        btn_run.setCursor(Qt.PointingHandCursor)
+        btn_run.setFixedSize(30, 30)
+        btn_run.setStyleSheet(f"""
+            QToolButton {{
+                background-color: transparent;
+                color: {p.accent};
+                border: none;
+                border-radius: {Radius.SM}px;
+                font-size: 13px;
+                font-weight: 600;
+                padding: 0;
+            }}
+            QToolButton:hover {{
+                background-color: {p.accent};
+                color: #FFFFFF;
+            }}
+            QToolButton:pressed {{
+                background-color: {p.accent_active};
+                color: #FFFFFF;
+            }}
+        """)
+        btn_run.clicked.connect(lambda: self.event_bus.publish("run_current_file_requested", {"editor_tabs": self, "use_terminal": True}))
+        bar_layout.addWidget(btn_run)
+
+        # Split editor button
+        btn_split = make_btn("⊞", "Split Editor Right")
+        btn_split.clicked.connect(lambda: self.event_bus.publish("split_editor_requested", {}))
+
+        # Layout menu
+        btn_layout_menu = make_btn("⊟", "Editor Layout")
+        layout_menu = QMenu(btn_layout_menu)
+        layout_menu.addAction("Split Right (Ctrl+\\)").triggered.connect(
+            lambda: self.event_bus.publish("split_editor_requested", {"direction": "right"})
+        )
+        layout_menu.addAction("Split Down").triggered.connect(
+            lambda: self.event_bus.publish("split_editor_requested", {"direction": "down"})
+        )
+        layout_menu.addSeparator()
+        layout_menu.addAction("Single").triggered.connect(
+            lambda: self.event_bus.publish("unsplit_editor_requested", {})
+        )
+        layout_menu.addAction("Two Columns").triggered.connect(
+            lambda: self.event_bus.publish("split_editor_requested", {"direction": "right", "mode": "two_cols"})
+        )
+        btn_layout_menu.setMenu(layout_menu)
+        btn_layout_menu.setPopupMode(QToolButton.InstantPopup)
+
+        # Overflow menu button
+        btn_more = make_btn("⋯", "More Actions")
+        more_menu = QMenu(btn_more)
+        more_menu.addAction("Close All Tabs").triggered.connect(self.close_all_tabs)
+        more_menu.addAction("Close Other Tabs").triggered.connect(self.close_other_tabs)
+        more_menu.addSeparator()
+        more_menu.addAction("Toggle Minimap (Alt+M)").triggered.connect(self.toggle_minimap)
+        more_menu.addAction("Toggle Breadcrumbs").triggered.connect(self._toggle_breadcrumbs)
+        more_menu.addAction("Toggle Word Wrap").triggered.connect(self._toggle_wordwrap)
+        more_menu.addSeparator()
+        more_menu.addAction("Reopen Closed Tab (Ctrl+Shift+T)").triggered.connect(self.reopen_closed_tab)
+        btn_more.setMenu(more_menu)
+        btn_more.setPopupMode(QToolButton.InstantPopup)
+
+        parent_layout.addWidget(bar)
 
     def setup_connections(self):
         """Setup signal connections."""
@@ -784,6 +902,34 @@ class EditorTabs(QWidget):
             editor.deleteLater()
             self.event_bus.publish("editor_closed", {"path": path_str, "index": idx})
             self._publish_session_update()
+
+    def close_all_tabs(self):
+        """Close all open tabs."""
+        while self.tabs.count() > 0:
+            self.close_tab(0)
+
+    def close_other_tabs(self):
+        """Close all tabs except the currently active one."""
+        current = self.tabs.currentIndex()
+        if current < 0:
+            return
+        indices = list(range(self.tabs.count()))
+        indices.remove(current)
+        for idx in reversed(indices):
+            self.close_tab(idx)
+
+    def _toggle_breadcrumbs(self):
+        """Toggle breadcrumb visibility."""
+        if self.breadcrumb:
+            self.breadcrumb.setVisible(not self.breadcrumb.isVisible())
+
+    def _toggle_wordwrap(self):
+        """Toggle word wrap in current editor."""
+        editor = self.get_current_editor()
+        if editor and hasattr(editor, "setLineWrapMode"):
+            from PySide6.QtWidgets import QTextEdit
+            current = editor.lineWrapMode()
+            editor.setLineWrapMode(QTextEdit.WidgetWidth if current == QTextEdit.NoWrap else QTextEdit.NoWrap)
 
     def on_editor_modified(self, path_str, modified):
         """Handle editor modified state change — update tab label + publish events."""

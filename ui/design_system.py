@@ -1,11 +1,11 @@
 """
-MyCodingMaster Design System — v1.6.8
+MyCodingMaster Design System — v2.0 (Premium Redesign)
 
 Centralized design tokens and style system.
 Professional, minimal, fast, modern, AI-first, developer-focused.
 
 Inspired by: Cursor, Linear, Raycast, JetBrains, GitHub Desktop, Warp, Zed
-Identity: Unique MyCodingMaster aesthetic
+Identity: Unique MyCodingMaster aesthetic — calm, premium, unified.
 """
 from typing import Dict, Optional
 from dataclasses import dataclass
@@ -19,10 +19,10 @@ from PySide6.QtCore import QEasingCurve
 
 class ActivityBar:
     """Activity bar configuration - premium IDE style."""
-    WIDTH = 48        # Fixed width (more balanced)
-    ICON_SIZE = 32    # Button size (refined)
-    PADDING = 6       # Internal padding (increased for better breathing)
-    SPACING = 4       # Button spacing (improved visual rhythm)
+    WIDTH = 48        # Fixed width
+    ICON_SIZE = 32    # Button size
+    PADDING = 6       # Internal padding
+    SPACING = 4       # Button spacing
 
 
 class Sidebar:
@@ -32,19 +32,19 @@ class Sidebar:
     MAX_WIDTH = 480
     COLLAPSED_WIDTH = 48
     HEADER_HEIGHT = 35
-    ROW_HEIGHT = 24  # Slightly more breathing room
+    ROW_HEIGHT = 24
 
 
 class Spacing:
     """Consistent spacing scale (4px base unit)."""
     XXS = 2   # 2px  — Tiny gaps
     XS = 4    # 4px  — Minimal spacing
-    SM = 8    # 8px  — Small spacing (increased from 6)
-    MD = 12   # 12px — Default spacing (increased from 8)
-    LG = 16   # 16px — Medium spacing (refined)
-    XL = 24   # 24px — Large spacing (refined)
-    XXL = 32  # 32px — Extra large (refined)
-    XXXL = 40 # 40px — Section spacing (increased)
+    SM = 8    # 8px  — Small spacing
+    MD = 12   # 12px — Default spacing
+    LG = 16   # 16px — Medium spacing
+    XL = 24   # 24px — Large spacing
+    XXL = 32  # 32px — Extra large
+    XXXL = 40 # 40px — Section spacing
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -52,13 +52,14 @@ class Spacing:
 # ═══════════════════════════════════════════════════════════════════════
 
 class Radius:
-    """Professional border radius values."""
+    """Professional border radius values — refined for premium feel (8-10px system)."""
     NONE = 0    # Sharp corners
-    SM = 3      # Subtle rounding (refined for minimalism)
-    MD = 6      # Default rounding
-    LG = 8      # Card rounding
-    XL = 12     # Dialog rounding (refined)
-    ROUND = 20  # Pill shape
+    SM = 6      # Subtle rounding (buttons, inputs)
+    MD = 8      # Default rounding (cards, panels)
+    LG = 10     # Card rounding (dialogs, dropdowns)
+    XL = 12     # Large rounding (modals, popovers)
+    XXL = 16    # Extra-large (command palette)
+    ROUND = 24  # Pill shape
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -68,10 +69,10 @@ class Radius:
 class Shadow:
     """Subtle elevation shadows."""
     NONE = "none"
-    SM = "0 1px 3px rgba(0, 0, 0, 0.12)"
-    MD = "0 2px 8px rgba(0, 0, 0, 0.18)"
-    LG = "0 4px 16px rgba(0, 0, 0, 0.24)"
-    XL = "0 8px 24px rgba(0, 0, 0, 0.32)"
+    SM = "0 1px 2px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.08)"
+    MD = "0 2px 6px rgba(0, 0, 0, 0.16), 0 0 1px rgba(0, 0, 0, 0.08)"
+    LG = "0 4px 12px rgba(0, 0, 0, 0.20), 0 0 1px rgba(0, 0, 0, 0.06)"
+    XL = "0 8px 24px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.08)"
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -93,15 +94,15 @@ class FontFamily:
 
 
 class FontSize:
-    """Type scale."""
+    """Type scale — refined for sharp hierarchy."""
     XXS = 9   # Tiny labels
-    XS = 11   # Small labels (increased for better readability)
-    SM = 12   # Default UI (increased)
-    MD = 13   # Body text (increased)
-    LG = 14   # Emphasis
-    XL = 16   # Headings (increased)
+    XS = 11   # Small labels, status text
+    SM = 12   # Default UI text
+    MD = 13   # Body text
+    LG = 14   # Emphasis, section titles
+    XL = 16   # Headings
     XXL = 18  # Large headings
-    XXXL = 20 # Hero text (increased)
+    XXXL = 20 # Hero text
     
     # Code
     CODE_SM = 11
@@ -161,30 +162,30 @@ class ColorPalette:
     primary_active: str
     primary_text: str
     
-    # Surfaces
-    bg: str              # Main background
-    bg_secondary: str    # Secondary background (activity bar, sidebar header)
-    surface: str         # Panel surface
-    surface_hover: str   # Panel hover state
-    surface_active: str  # Panel active/selected state
+    # Surfaces — layered depth system
+    bg: str              # Deepest background (application canvas)
+    bg_secondary: str    # Raised surface (activity bar, panel backgrounds)
+    surface: str         # Card / input surface (elevated controls)
+    surface_hover: str   # Hover state for surfaces
+    surface_active: str  # Active/selected state
     
     # UI Elements
     sidebar: str         # Sidebar body background
-    editor_bg: str
-    toolbar: str
-    terminal_bg: str
-    statusbar: str
+    editor_bg: str       # Editor background (focus area)
+    toolbar: str         # Toolbar background
+    terminal_bg: str     # Terminal background
+    statusbar: str       # Status bar background
     
     # Borders
-    border: str
-    border_subtle: str
-    border_hover: str
-    border_focus: str
+    border: str          # Default border
+    border_subtle: str   # Subtle dividers (hairline separators)
+    border_hover: str    # Hovered borders
+    border_focus: str    # Focused input borders
     
-    # Text
-    text: str            # Primary text
-    text_secondary: str  # Secondary text
-    text_tertiary: str   # Muted text
+    # Text — 4-level hierarchy
+    text: str            # Primary text (high contrast)
+    text_secondary: str  # Secondary text (labels, descriptions)
+    text_tertiary: str   # Muted text (placeholders, hints)
     text_disabled: str   # Disabled text
     
     # States
@@ -220,115 +221,120 @@ class ColorPalette:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# THEME DEFINITIONS
+# THEME DEFINITIONS — Refined Premium Palettes
 # ═══════════════════════════════════════════════════════════════════════
 
 class Themes:
-    """Professional theme collection."""
+    """Professional theme collection — handcrafted for developer comfort."""
     
     DARK = ColorPalette(
-        # Primary
-        primary="#3B82F6",
-        primary_hover="#60A5FA",
-        primary_active="#2563EB",
+        # Primary — Purple/violet accent matching reference
+        primary="#8B5CF6",
+        primary_hover="#A78BFA",
+        primary_active="#7C3AED",
         primary_text="#FFFFFF",
         
-        # Surfaces - refined for premium feel
-        bg="#1E1E1E",
-        bg_secondary="#1E1E1E",
-        surface="#252526",
-        surface_hover="#2A2D2E",
-        surface_active="#37373D",
+        # Surfaces — layered depth: 5 distinct levels (darker, more premium)
+        # Level 0: Deepest (app canvas)
+        bg="#0B0B10",
+        # Level 1: Raised panels (activity bar, sidebar header, dock title)
+        bg_secondary="#131318",
+        # Level 2: Cards / inputs / dropdowns
+        surface="#1A1A22",
+        # Level 3: Hover state
+        surface_hover="#23232E",
+        # Level 4: Active / pressed / selected state
+        surface_active="#2D2D3C",
         
-        # UI Elements
-        sidebar="#1E1E1E",
-        editor_bg="#1E1E1E",
-        toolbar="#1E1E1E",
-        terminal_bg="#1E1E1E",
-        statusbar="#007ACC",
+        # UI Elements — harmonized with surface layers
+        sidebar="#111116",
+        editor_bg="#0E0E14",
+        toolbar="#131318",
+        terminal_bg="#09090D",
+        statusbar="#4C1D95",  # Purple status bar background
         
-        # Borders - refined for subtle separation
-        border="#3E3E42",
-        border_subtle="#2D2D30",
-        border_hover="#4E5358",
-        border_focus="#3B82F6",
+        # Borders — ultra-subtle for clean separation
+        border="#2A2A38",
+        border_subtle="#1E1E28",
+        border_hover="#3A3A4C",
+        border_focus="#8B5CF6",
         
-        # Text - professional contrast
-        text="#CCCCCC",
-        text_secondary="#AAAAAAAA",
-        text_tertiary="#888888",
-        text_disabled="#555555",
+        # Text — refined 4-level hierarchy with proper contrast
+        text="#E4E4ED",
+        text_secondary="#9898A8",
+        text_tertiary="#636375",
+        text_disabled="#3E3E4C",
         
         # States
-        hover="#2A2D2E",
-        selection="#37373D",
-        selection_inactive="#2D2D30",
-        focus_ring="#3B82F6",
+        hover="#23232E",
+        selection="#3B2A5A",
+        selection_inactive="#1E1E28",
+        focus_ring="#8B5CF6",
         
-        # Semantic
-        error="#F44336",
-        error_bg="#2D1515",
-        warning="#FF9800",
-        warning_bg="#2D2415",
-        success="#4CAF50",
-        success_bg="#152D23",
-        info="#2196F3",
-        info_bg="#152535",
+        # Semantic — muted but clear
+        error="#F87171",
+        error_bg="#2E1414",
+        warning="#FBBF24",
+        warning_bg="#2E2510",
+        success="#34D399",
+        success_bg="#0F2A1E",
+        info="#60A5FA",
+        info_bg="#142033",
         
-        # Accent
-        accent="#3B82F6",
-        accent_hover="#60A5FA",
-        accent_active="#2563EB",
+        # Accent — purple/violet (matches reference image)
+        accent="#8B5CF6",
+        accent_hover="#A78BFA",
+        accent_active="#7C3AED",
         
-        # Syntax highlighting
-        syntax_keyword="#569CD6",
-        syntax_string="#CE9178",
-        syntax_comment="#6A9955",
-        syntax_number="#B5CEA8",
-        syntax_function="#DCDCAA",
-        syntax_class="#4EC9B0",
-        syntax_operator="#CCCCCC",
-        syntax_bracket="#FFCC66",
+        # Syntax highlighting — balanced, VSCode-inspired with purple tint
+        syntax_keyword="#C084FC",
+        syntax_string="#86EFAC",
+        syntax_comment="#4B5563",
+        syntax_number="#FBBF24",
+        syntax_function="#60A5FA",
+        syntax_class="#FCD34D",
+        syntax_operator="#94A3B8",
+        syntax_bracket="#FDE68A",
     )
     
     LIGHT = ColorPalette(
         # Primary
-        primary="#2563EB",
-        primary_hover="#3B82F6",
-        primary_active="#1D4ED8",
+        primary="#4F6AE6",
+        primary_hover="#6580EF",
+        primary_active="#3D56CC",
         primary_text="#FFFFFF",
         
         # Surfaces
-        bg="#FFFFFF",
-        bg_secondary="#F9FAFB",
+        bg="#F8F8FA",
+        bg_secondary="#F0F0F4",
         surface="#FFFFFF",
-        surface_hover="#F3F4F6",
-        surface_active="#E5E7EB",
+        surface_hover="#ECECF0",
+        surface_active="#E0E0E8",
         
         # UI Elements
-        sidebar="#F9FAFB",
+        sidebar="#F0F0F4",
         editor_bg="#FFFFFF",
-        toolbar="#F9FAFB",
+        toolbar="#F8F8FA",
         terminal_bg="#FAFAFA",
-        statusbar="#F3F4F6",
+        statusbar="#F0F0F4",
         
         # Borders
-        border="#E5E7EB",
-        border_subtle="#F3F4F6",
-        border_hover="#D1D5DB",
-        border_focus="#2563EB",
+        border="#DCDCE4",
+        border_subtle="#E8E8F0",
+        border_hover="#C8C8D4",
+        border_focus="#4F6AE6",
         
         # Text
-        text="#111827",
-        text_secondary="#6B7280",
-        text_tertiary="#9CA3AF",
-        text_disabled="#D1D5DB",
+        text="#1C1C28",
+        text_secondary="#6B6B80",
+        text_tertiary="#9898AC",
+        text_disabled="#C0C0CC",
         
         # States
-        hover="#F3F4F6",
-        selection="#DBEAFE",
-        selection_inactive="#F3F4F6",
-        focus_ring="#2563EB",
+        hover="#ECECF0",
+        selection="#D6DEFF",
+        selection_inactive="#E8E8F0",
+        focus_ring="#4F6AE6",
         
         # Semantic
         error="#DC2626",
@@ -337,13 +343,13 @@ class Themes:
         warning_bg="#FFFBEB",
         success="#059669",
         success_bg="#F0FDF4",
-        info="#2563EB",
-        info_bg="#EFF6FF",
+        info="#4F6AE6",
+        info_bg="#EFF3FF",
         
         # Accent
-        accent="#2563EB",
-        accent_hover="#3B82F6",
-        accent_active="#1D4ED8",
+        accent="#4F6AE6",
+        accent_hover="#6580EF",
+        accent_active="#3D56CC",
         
         # Syntax
         syntax_keyword="#7C3AED",
@@ -362,27 +368,27 @@ class Themes:
         primary_active="#4A9EE0",
         primary_text="#FFFFFF",
         
-        bg="#282C34",
+        bg="#1E2127",
         bg_secondary="#21252B",
         surface="#282C34",
         surface_hover="#2C323C",
         surface_active="#323842",
         
-        sidebar="#21252B",
+        sidebar="#1E2127",
         editor_bg="#282C34",
         toolbar="#21252B",
-        terminal_bg="#1E2127",
+        terminal_bg="#1B1F23",
         statusbar="#21252B",
         
         border="#181A1F",
-        border_subtle="#21252B",
+        border_subtle="#1E2127",
         border_hover="#3E4451",
         border_focus="#61AFEF",
         
         text="#ABB2BF",
-        text_secondary="#5C6370",
-        text_tertiary="#3E4451",
-        text_disabled="#2C323C",
+        text_secondary="#7F848E",
+        text_tertiary="#5C6370",
+        text_disabled="#3E4451",
         
         hover="#2C323C",
         selection="#3E4451",
@@ -419,16 +425,16 @@ class Themes:
         primary_text="#FFFFFF",
         
         bg="#0D1117",
-        bg_secondary="#010409",
+        bg_secondary="#0D1117",
         surface="#161B22",
         surface_hover="#1C2128",
         surface_active="#21262D",
         
         sidebar="#0D1117",
         editor_bg="#0D1117",
-        toolbar="#010409",
+        toolbar="#0D1117",
         terminal_bg="#010409",
-        statusbar="#010409",
+        statusbar="#0D1117",
         
         border="#30363D",
         border_subtle="#21262D",
@@ -474,20 +480,20 @@ class Themes:
         primary_active="#6FADC4",
         primary_text="#2E3440",
         
-        bg="#2E3440",
-        bg_secondary="#242933",
+        bg="#242933",
+        bg_secondary="#2E3440",
         surface="#3B4252",
         surface_hover="#434C5E",
         surface_active="#4C566A",
         
-        sidebar="#2E3440",
+        sidebar="#242933",
         editor_bg="#2E3440",
-        toolbar="#242933",
-        terminal_bg="#2E3440",
-        statusbar="#242933",
+        toolbar="#2E3440",
+        terminal_bg="#242933",
+        statusbar="#2E3440",
         
-        border="#434C5E",
-        border_subtle="#3B4252",
+        border="#3B4252",
+        border_subtle="#2E3440",
         border_hover="#4C566A",
         border_focus="#88C0D0",
         
@@ -569,13 +575,13 @@ class DesignSystem:
         return ""
     
     def _global_stylesheet(self) -> str:
-        """Global application stylesheet — complete redesign."""
+        """Global application stylesheet — complete premium design."""
         p = self.palette
         return f"""
         /* Global Reset & Base */
         * {{
             font-family: {FontFamily.UI_FALLBACK};
-            font-size: {FontSize.MD}px;
+            font-size: {FontSize.SM}px;
             outline: none;
         }}
         
@@ -602,22 +608,23 @@ class DesignSystem:
             background-color: {p.bg_secondary};
             color: {p.text_secondary};
             padding: {Spacing.SM}px {Spacing.MD}px;
-            border-bottom: 1px solid {p.border};
-            font-size: {FontSize.SM}px;
-            font-weight: {FontWeight.MEDIUM};
+            border-bottom: 1px solid {p.border_subtle};
+            font-size: {FontSize.XS}px;
+            font-weight: {FontWeight.SEMIBOLD};
+            letter-spacing: 0.04em;
         }}
         
         QDockWidget::close-button, QDockWidget::float-button {{
             border: none;
             background: transparent;
             padding: {Spacing.XXS}px;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
+            border-radius: {Radius.SM}px;
         }}
         
         QDockWidget::close-button:hover, QDockWidget::float-button:hover {{
             background-color: {p.surface_hover};
-            border-radius: {Radius.SM}px;
         }}
         
         QDockWidget::float-button {{
@@ -633,7 +640,7 @@ class DesignSystem:
         }}
         
         QMainWindow::separator {{
-            background-color: {p.border};
+            background-color: {p.border_subtle};
             width: 1px;
             height: 1px;
         }}
@@ -644,7 +651,7 @@ class DesignSystem:
         
         /* ToolTip — compact, premium feel */
         QToolTip {{
-            background-color: {p.surface_active};
+            background-color: {p.surface};
             color: {p.text};
             border: 1px solid {p.border};
             border-radius: {Radius.SM}px;
@@ -657,13 +664,13 @@ class DesignSystem:
             background-color: {p.surface};
             border: 1px solid {p.border};
             border-radius: {Radius.LG}px;
-            padding: {Spacing.SM}px 0;
+            padding: {Spacing.XS}px 0;
         }}
         
         QMenu::item {{
             padding: {Spacing.SM}px {Spacing.XL}px;
             border-radius: {Radius.SM}px;
-            margin: 1px {Spacing.SM}px;
+            margin: 1px {Spacing.XS}px;
             color: {p.text};
             font-size: {FontSize.SM}px;
         }}
@@ -673,10 +680,18 @@ class DesignSystem:
             color: {p.text};
         }}
         
+        QMenu::item:disabled {{
+            color: {p.text_disabled};
+        }}
+        
         QMenu::separator {{
             height: 1px;
             background-color: {p.border_subtle};
-            margin: {Spacing.SM}px {Spacing.LG}px;
+            margin: {Spacing.XS}px {Spacing.MD}px;
+        }}
+        
+        QMenu::icon {{
+            padding-left: {Spacing.SM}px;
         }}
         
         /* Scrollbars — thin, modern, IDE-style */
@@ -701,6 +716,10 @@ class DesignSystem:
             height: 0;
         }}
         
+        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+            background: none;
+        }}
+        
         QScrollBar:horizontal {{
             background-color: transparent;
             height: 8px;
@@ -722,12 +741,16 @@ class DesignSystem:
             width: 0;
         }}
         
+        QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
+            background: none;
+        }}
+        
         /* Buttons */
         QPushButton {{
             background-color: {p.surface};
             color: {p.text_secondary};
             border: 1px solid {p.border};
-            border-radius: {Radius.MD}px;
+            border-radius: {Radius.SM}px;
             padding: {Spacing.SM}px {Spacing.LG}px;
             font-size: {FontSize.SM}px;
             font-weight: {FontWeight.MEDIUM};
@@ -748,6 +771,12 @@ class DesignSystem:
             background-color: {p.surface_active};
             color: {p.text};
             border-color: {p.border_hover};
+        }}
+        
+        QPushButton:disabled {{
+            color: {p.text_disabled};
+            border-color: {p.border_subtle};
+            background-color: transparent;
         }}
         
         QPushButton.primary {{
@@ -781,10 +810,11 @@ class DesignSystem:
             background-color: {p.surface};
             color: {p.text};
             border: 1px solid {p.border};
-            border-radius: {Radius.MD}px;
-            padding: {Spacing.SM}px {Spacing.MD}px;
+            border-radius: {Radius.SM}px;
+            padding: {Spacing.XS}px {Spacing.SM}px;
             selection-background-color: {p.selection};
             selection-color: {p.text};
+            font-size: {FontSize.SM}px;
         }}
         
         QLineEdit:hover {{
@@ -801,6 +831,7 @@ class DesignSystem:
             border: none;
             selection-background-color: {p.selection};
             selection-color: {p.text};
+            font-size: {FontSize.SM}px;
         }}
         
         /* ComboBox */
@@ -808,9 +839,11 @@ class DesignSystem:
             background-color: {p.surface};
             color: {p.text};
             border: 1px solid {p.border};
-            border-radius: {Radius.MD}px;
-            padding: {Spacing.SM}px {Spacing.MD}px;
-            min-width: 120px;
+            border-radius: {Radius.SM}px;
+            padding: {Spacing.XS}px {Spacing.SM}px;
+            min-width: 100px;
+            min-height: 24px;
+            font-size: {FontSize.SM}px;
         }}
         
         QComboBox:hover {{
@@ -823,35 +856,38 @@ class DesignSystem:
         
         QComboBox::drop-down {{
             border: none;
-            width: 20px;
+            width: 18px;
         }}
         
         QComboBox::down-arrow {{
             image: none;
             width: 0;
             height: 0;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-top: 5px solid {p.text_tertiary};
+            border-left: 3px solid transparent;
+            border-right: 3px solid transparent;
+            border-top: 4px solid {p.text_tertiary};
         }}
         
         QComboBox QAbstractItemView {{
             background-color: {p.surface};
             border: 1px solid {p.border};
-            border-radius: {Radius.MD}px;
+            border-radius: {Radius.SM}px;
             padding: {Spacing.XS}px;
             selection-background-color: {p.surface_hover};
+            outline: none;
+            font-size: {FontSize.SM}px;
         }}
         
         /* Labels */
         QLabel {{
             color: {p.text};
-            font-size: {FontSize.MD}px;
+            font-size: {FontSize.SM}px;
+            background-color: transparent;
         }}
         
         QLabel.muted {{
             color: {p.text_tertiary};
-            font-size: {FontSize.SM}px;
+            font-size: {FontSize.XS}px;
         }}
         
         QLabel.heading {{
@@ -861,31 +897,7 @@ class DesignSystem:
         }}
         
         /* List Widgets / Tree Widgets */
-        QListWidget {{
-            background-color: {p.surface};
-            border: none;
-            outline: none;
-            selection-background-color: {p.surface_hover};
-            selection-color: {p.text};
-            color: {p.text};
-            font-size: {FontSize.SM}px;
-        }}
-        
-        QListWidget::item {{
-            padding: {Spacing.SM}px {Spacing.MD}px;
-            border-radius: {Radius.SM}px;
-            margin: {Spacing.XXS}px {Spacing.XS}px;
-        }}
-        
-        QListWidget::item:hover {{
-            background-color: {p.surface_hover};
-        }}
-        
-        QListWidget::item:selected {{
-            background-color: {p.surface_active};
-        }}
-        
-        QTreeWidget {{
+        QListWidget, QTreeWidget, QListView, QTreeView {{
             background-color: {p.sidebar};
             border: none;
             outline: none;
@@ -893,22 +905,44 @@ class DesignSystem:
             selection-color: {p.text};
             color: {p.text};
             font-size: {FontSize.SM}px;
-            padding: {Spacing.XS}px 0;
         }}
         
-        QTreeWidget::item {{
+        QListWidget::item, QListView::item {{
             padding: {Spacing.XS}px {Spacing.MD}px;
+            border-radius: {Radius.SM}px;
+            margin: 1px {Spacing.XS}px;
+            min-height: 24px;
         }}
         
-        QTreeWidget::item:hover {{
+        QListWidget::item:hover, QListView::item:hover {{
             background-color: {p.surface_hover};
         }}
         
-        QTreeWidget::item:selected {{
+        QListWidget::item:selected, QListView::item:selected {{
             background-color: {p.surface_active};
+            color: {p.text};
         }}
         
-        QTreeWidget::branch {{
+        QTreeWidget::item, QTreeView::item {{
+            padding: {Spacing.XS}px {Spacing.SM}px;
+            min-height: 24px;
+        }}
+        
+        QTreeWidget::item:hover, QTreeView::item:hover {{
+            background-color: {p.surface_hover};
+        }}
+        
+        QTreeWidget::item:selected, QTreeView::item:selected {{
+            background-color: {p.surface_active};
+            color: {p.text};
+        }}
+        
+        QTreeWidget::item:selected:!active, QTreeView::item:selected:!active {{
+            background-color: {p.selection_inactive};
+            color: {p.text};
+        }}
+        
+        QTreeWidget::branch, QTreeView::branch {{
             background-color: transparent;
         }}
         
@@ -927,14 +961,15 @@ class DesignSystem:
         /* Checkboxes */
         QCheckBox {{
             color: {p.text};
-            font-size: {FontSize.MD}px;
+            font-size: {FontSize.SM}px;
+            spacing: {Spacing.XS}px;
         }}
         
         QCheckBox::indicator {{
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border: 1px solid {p.border};
-            border-radius: {Radius.SM}px;
+            border-radius: 3px;
             background-color: {p.surface};
         }}
         
@@ -950,14 +985,14 @@ class DesignSystem:
         /* Radio Buttons */
         QRadioButton {{
             color: {p.text};
-            font-size: {FontSize.MD}px;
+            font-size: {FontSize.SM}px;
         }}
         
         QRadioButton::indicator {{
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border: 1px solid {p.border};
-            border-radius: 8px;
+            border-radius: 7px;
             background-color: {p.surface};
         }}
         
@@ -975,23 +1010,41 @@ class DesignSystem:
         
         QSlider::handle:horizontal {{
             background-color: {p.text_secondary};
-            width: 16px;
-            height: 16px;
-            border-radius: 8px;
-            margin: -6px 0;
+            width: 14px;
+            height: 14px;
+            border-radius: 7px;
+            margin: -5px 0;
         }}
         
         QSlider::handle:horizontal:hover {{
             background-color: {p.accent};
         }}
         
+        /* Progress Bar */
+        QProgressBar {{
+            background-color: {p.surface};
+            border: none;
+            border-radius: {Radius.SM}px;
+            height: 4px;
+            text-align: center;
+            font-size: {FontSize.XS}px;
+            color: transparent;
+        }}
+        
+        QProgressBar::chunk {{
+            background-color: {p.accent};
+            border-radius: {Radius.SM}px;
+        }}
+        
         /* Status Bar */
         QStatusBar {{
             background-color: {p.statusbar};
-            border-top: 1px solid {p.border};
+            border-top: 1px solid {p.border_subtle};
             color: {p.text_secondary};
             font-size: {FontSize.XS}px;
-            padding: 0 {Spacing.MD}px;
+            padding: 0 {Spacing.SM}px;
+            min-height: 24px;
+            max-height: 24px;
         }}
         
         QStatusBar::item {{
@@ -1002,31 +1055,31 @@ class DesignSystem:
         QToolBar {{
             background-color: {p.toolbar};
             border: none;
-            border-bottom: 1px solid {p.border};
+            border-bottom: 1px solid {p.border_subtle};
             spacing: {Spacing.XS}px;
-            padding: {Spacing.XXS}px {Spacing.SM}px;
+            padding: 0 {Spacing.SM}px;
         }}
         
         QToolBar::separator {{
             background-color: {p.border_subtle};
             width: 1px;
-            margin: {Spacing.SM}px {Spacing.MD}px;
+            margin: {Spacing.SM}px {Spacing.SM}px;
         }}
         
         QToolButton {{
             background-color: transparent;
             color: {p.text_secondary};
             border: none;
-            border-radius: {Radius.MD}px;
-            padding: {Spacing.SM}px {Spacing.LG}px;
+            border-radius: {Radius.SM}px;
+            padding: {Spacing.XS}px {Spacing.SM}px;
             font-size: {FontSize.SM}px;
             font-weight: {FontWeight.MEDIUM};
+            min-height: 28px;
         }}
         
         QToolButton:hover {{
             background-color: {p.surface_hover};
             color: {p.text};
-            transition: background-color 100ms ease-out;
         }}
         
         QToolButton:pressed {{
@@ -1045,8 +1098,8 @@ class DesignSystem:
             image: none;
             width: 0;
             height: 0;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
+            border-left: 3px solid transparent;
+            border-right: 3px solid transparent;
             border-top: 4px solid {p.text_tertiary};
         }}
         
@@ -1054,32 +1107,38 @@ class DesignSystem:
             border-top-color: {p.text};
         }}
         
-        /* Dropdown Menu */
-        QMenu {{
-            background-color: {p.surface};
+        /* Group Boxes */
+        QGroupBox {{
             border: 1px solid {p.border};
             border-radius: {Radius.LG}px;
-            padding: {Spacing.XS}px 0;
-        }}
-        
-        QMenu::item {{
-            padding: {Spacing.SM}px {Spacing.LG}px;
-            border-radius: {Radius.SM}px;
-            margin: {Spacing.XXS}px {Spacing.XS}px;
-            color: {p.text};
+            margin-top: {Spacing.LG}px;
+            font-weight: {FontWeight.SEMIBOLD};
+            color: {p.text_secondary};
             font-size: {FontSize.SM}px;
-            font-weight: {FontWeight.MEDIUM};
+            padding-top: {Spacing.MD}px;
         }}
         
-        QMenu::item:selected {{
-            background-color: {p.surface_hover};
-            color: {p.text};
+        QGroupBox::title {{
+            subcontrol-origin: margin;
+            left: {Spacing.MD}px;
+            padding: 0 {Spacing.SM}px;
         }}
         
-        QMenu::separator {{
-            height: 1px;
+        /* Splitter — ultra-thin, accent on hover */
+        QSplitter::handle {{
             background-color: {p.border_subtle};
-            margin: {Spacing.XS}px {Spacing.MD}px;
+        }}
+        
+        QSplitter::handle:hover {{
+            background-color: {p.accent};
+        }}
+        
+        QSplitter::handle:horizontal {{
+            width: 1px;
+        }}
+        
+        QSplitter::handle:vertical {{
+            height: 1px;
         }}
         """
     

@@ -212,14 +212,14 @@ class PremiumActivityBar(QWidget):
                 background-color: transparent;
                 color: {p.text_tertiary};
                 border: none;
-                border-radius: 6px;
-                font-size: 16px;
+                border-radius: {Radius.SM}px;
+                font-size: 15px;
                 padding: 0px;
-                min-width: 36px;
-                max-width: 36px;
-                min-height: 36px;
-                max-height: 36px;
-                margin: 0;
+                min-width: 34px;
+                max-width: 34px;
+                min-height: 34px;
+                max-height: 34px;
+                margin: 1px 0;
             }}
             
             QPushButton#ActivityBtn_explorer:hover,
@@ -231,7 +231,7 @@ class PremiumActivityBar(QWidget):
             QPushButton#ActivityBtn_tasks:hover,
             QPushButton#ActivityBtn_settings:hover {{
                 background-color: {p.surface_hover};
-                color: {p.text};
+                color: {p.text_secondary};
             }}
             
             QPushButton#ActivityBtn_explorer:checked,
@@ -242,9 +242,9 @@ class PremiumActivityBar(QWidget):
             QPushButton#ActivityBtn_memory:checked,
             QPushButton#ActivityBtn_tasks:checked,
             QPushButton#ActivityBtn_settings:checked {{
-                background-color: {p.surface_active};
+                background-color: transparent;
                 color: {p.text};
-                border-radius: 6px;
+                border-radius: {Radius.SM}px;
                 border-left: 2px solid {p.accent};
             }}
         """)
@@ -345,21 +345,16 @@ class PremiumSidebarHeader(QWidget):
         p = get_design_system().palette
         
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 0, 8, 0)
-        layout.setSpacing(8)
+        layout.setContentsMargins(12, 0, 6, 0)
+        layout.setSpacing(6)
         
-        # Folder icon
-        icon_label = QLabel("📁")
-        icon_label.setStyleSheet("font-size: 13px; color: {};".format(p.text_secondary))
-        layout.addWidget(icon_label)
-        
-        # Title label - compact, professional
+        # Title label - compact, professional, uppercase
         self._title_label = QLabel(title)
         self._title_label.setStyleSheet(f"""
             font-weight: 600;
-            font-size: 11px;
-            color: {p.text_secondary};
-            letter-spacing: 0.05em;
+            font-size: 10px;
+            color: {p.text_tertiary};
+            letter-spacing: 0.06em;
             background-color: transparent;
         """)
         layout.addWidget(self._title_label)
@@ -369,7 +364,7 @@ class PremiumSidebarHeader(QWidget):
         # New Folder button - modern icon button
         self.new_folder_btn = QToolButton()
         self.new_folder_btn.setText("+")
-        self.new_folder_btn.setFixedSize(26, 26)
+        self.new_folder_btn.setFixedSize(22, 22)
         self.new_folder_btn.setToolTip("New Folder")
         self.new_folder_btn.setStyleSheet(f"""
             QToolButton {{
@@ -377,12 +372,12 @@ class PremiumSidebarHeader(QWidget):
                 border: none;
                 border-radius: {Radius.SM}px;
                 color: {p.text_tertiary};
-                font-size: 16px;
+                font-size: 14px;
                 font-weight: bold;
             }}
             QToolButton:hover {{
                 background-color: {p.surface_hover};
-                color: {p.text};
+                color: {p.text_secondary};
             }}
         """)
         layout.addWidget(self.new_folder_btn)
@@ -390,7 +385,7 @@ class PremiumSidebarHeader(QWidget):
         # More actions button - compact dots
         self.more_btn = QToolButton()
         self.more_btn.setText("⋯")
-        self.more_btn.setFixedSize(26, 26)
+        self.more_btn.setFixedSize(22, 22)
         self.more_btn.setToolTip("More Actions")
         self.more_btn.setStyleSheet(f"""
             QToolButton {{
@@ -398,18 +393,19 @@ class PremiumSidebarHeader(QWidget):
                 border: none;
                 border-radius: {Radius.SM}px;
                 color: {p.text_tertiary};
-                font-size: 16px;
+                font-size: 14px;
             }}
             QToolButton:hover {{
                 background-color: {p.surface_hover};
-                color: {p.text};
+                color: {p.text_secondary};
             }}
         """)
         layout.addWidget(self.more_btn)
         
-        # Bottom border - 1px subtle separator
+        # Styling — unified with activity bar tone
+        self.setObjectName("SidebarHeader")
         self.setStyleSheet(f"""
-            QWidget {{
+            QWidget#SidebarHeader {{
                 background-color: {p.bg_secondary};
                 border-bottom: 1px solid {p.border_subtle};
             }}
@@ -494,10 +490,10 @@ class PremiumFileTree(QTreeView):
             }}
 
             QTreeView::item {{
-                padding: 4px {Spacing.SM}px;
-                min-height: 24px;
+                padding: 3px {Spacing.SM}px;
+                min-height: 22px;
                 border-radius: {Radius.SM}px;
-                margin: 1px 6px;
+                margin: 0px 4px;
             }}
 
             QTreeView::item:hover {{
@@ -519,15 +515,15 @@ class PremiumFileTree(QTreeView):
 
             QScrollBar:vertical {{
                 background-color: transparent;
-                width: 8px;
+                width: 6px;
                 margin: 0;
             }}
 
             QScrollBar::handle:vertical {{
                 background-color: {p.border};
-                border-radius: 4px;
-                min-height: 28px;
-                margin: 2px 1px;
+                border-radius: 3px;
+                min-height: 24px;
+                margin: 2px 0px;
             }}
 
             QScrollBar::handle:vertical:hover {{
@@ -539,17 +535,22 @@ class PremiumFileTree(QTreeView):
                 height: 0;
             }}
 
+            QScrollBar::add-page:vertical,
+            QScrollBar::sub-page:vertical {{
+                background: none;
+            }}
+
             QScrollBar:horizontal {{
                 background-color: transparent;
-                height: 8px;
+                height: 6px;
                 margin: 0;
             }}
 
             QScrollBar::handle:horizontal {{
                 background-color: {p.border};
-                border-radius: 4px;
-                min-width: 28px;
-                margin: 1px 2px;
+                border-radius: 3px;
+                min-width: 24px;
+                margin: 0px 2px;
             }}
 
             QScrollBar::handle:horizontal:hover {{
@@ -559,6 +560,11 @@ class PremiumFileTree(QTreeView):
             QScrollBar::add-line:horizontal,
             QScrollBar::sub-line:horizontal {{
                 width: 0;
+            }}
+
+            QScrollBar::add-page:horizontal,
+            QScrollBar::sub-page:horizontal {{
+                background: none;
             }}
         """)
 
@@ -1025,7 +1031,7 @@ class PremiumExplorer(QWidget):
         search_layout.setContentsMargins(12, 12, 12, 12)
         search_layout.setSpacing(8)
         search_title = QLabel("Search in Workspace")
-        search_title.setStyleSheet("font-size: 12px; font-weight: 600; color: #888;")
+        search_title.setStyleSheet(f"font-size: {FontSize.SM}px; font-weight: 600; color: {p.text_secondary};")
         search_layout.addWidget(search_title)
 
         self.search_box = SearchBox()
@@ -1033,7 +1039,7 @@ class PremiumExplorer(QWidget):
         search_layout.addWidget(self.search_box)
 
         search_hint = QLabel("Instantly filters the Explorer tree.")
-        search_hint.setStyleSheet("color: #888; font-style: italic;")
+        search_hint.setStyleSheet(f"color: {p.text_tertiary}; font-style: italic; font-size: {FontSize.XS}px;")
         search_layout.addWidget(search_hint)
         search_layout.addStretch()
         self._content_stack.addWidget(self.search_panel)
@@ -1043,7 +1049,7 @@ class PremiumExplorer(QWidget):
         git_layout = QVBoxLayout(self.git_panel)
         git_layout.setContentsMargins(12, 12, 12, 12)
         git_label = QLabel("Source Control")
-        git_label.setStyleSheet("color: #888; font-style: italic;")
+        git_label.setStyleSheet(f"color: {p.text_tertiary}; font-size: {FontSize.SM}px;")
         git_layout.addWidget(git_label)
         git_layout.addStretch()
         self._content_stack.addWidget(self.git_panel)
@@ -1053,7 +1059,7 @@ class PremiumExplorer(QWidget):
         debug_layout = QVBoxLayout(self.debug_panel)
         debug_layout.setContentsMargins(12, 12, 12, 12)
         debug_label = QLabel("Debug & Run")
-        debug_label.setStyleSheet("color: #888; font-style: italic;")
+        debug_label.setStyleSheet(f"color: {p.text_tertiary}; font-size: {FontSize.SM}px;")
         debug_layout.addWidget(debug_label)
         debug_layout.addStretch()
         self._content_stack.addWidget(self.debug_panel)
@@ -1063,7 +1069,7 @@ class PremiumExplorer(QWidget):
         ext_layout = QVBoxLayout(self.extensions_panel)
         ext_layout.setContentsMargins(12, 12, 12, 12)
         ext_label = QLabel("Extensions")
-        ext_label.setStyleSheet("color: #888; font-style: italic;")
+        ext_label.setStyleSheet(f"color: {p.text_tertiary}; font-size: {FontSize.SM}px;")
         ext_layout.addWidget(ext_label)
         ext_layout.addStretch()
         self._content_stack.addWidget(self.extensions_panel)
@@ -1073,7 +1079,7 @@ class PremiumExplorer(QWidget):
         mem_layout = QVBoxLayout(self.memory_panel)
         mem_layout.setContentsMargins(12, 12, 12, 12)
         mem_label = QLabel("AI Memory")
-        mem_label.setStyleSheet("color: #888; font-style: italic;")
+        mem_label.setStyleSheet(f"color: {p.text_tertiary}; font-size: {FontSize.SM}px;")
         mem_layout.addWidget(mem_label)
         mem_layout.addStretch()
         self._content_stack.addWidget(self.memory_panel)
@@ -1083,7 +1089,7 @@ class PremiumExplorer(QWidget):
         task_layout = QVBoxLayout(self.tasks_panel)
         task_layout.setContentsMargins(12, 12, 12, 12)
         task_label = QLabel("Tasks")
-        task_label.setStyleSheet("color: #888; font-style: italic;")
+        task_label.setStyleSheet(f"color: {p.text_tertiary}; font-size: {FontSize.SM}px;")
         task_layout.addWidget(task_label)
         task_layout.addStretch()
         self._content_stack.addWidget(self.tasks_panel)
@@ -1093,7 +1099,7 @@ class PremiumExplorer(QWidget):
         settings_layout = QVBoxLayout(self.settings_panel)
         settings_layout.setContentsMargins(12, 12, 12, 12)
         settings_label = QLabel("Settings")
-        settings_label.setStyleSheet("color: #888; font-style: italic;")
+        settings_label.setStyleSheet(f"color: {p.text_tertiary}; font-size: {FontSize.SM}px;")
         settings_layout.addWidget(settings_label)
         settings_layout.addStretch()
         self._content_stack.addWidget(self.settings_panel)

@@ -321,12 +321,12 @@ class TerminalWidget(QWidget):
         
         self.output.setStyleSheet(f"""
             QTextEdit {{
-                background-color: #1E1E1E;
-                color: #D4D4D4;
+                background-color: {p.terminal_bg};
+                color: {p.text};
                 border: none;
                 padding: 8px;
-                selection-background-color: #264F78;
-                selection-color: #FFFFFF;
+                selection-background-color: {p.selection};
+                selection-color: {p.text};
             }}
         """)
     

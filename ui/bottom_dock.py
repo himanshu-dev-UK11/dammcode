@@ -36,7 +36,7 @@ class ProblemsTab(QWidget):
             color: {p.text_tertiary};
             font-size: {FontSize.XS}px;
             padding: 4px 12px;
-            background-color: {p.bg};
+            background-color: {p.bg_secondary};
             border-bottom: 1px solid {p.border_subtle};
         """)
         layout.addWidget(self._summary)
@@ -50,12 +50,16 @@ class ProblemsTab(QWidget):
                 font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
             }}
             QListWidget::item {{
-                padding: 3px 8px;
-                min-height: 22px;
+                padding: 2px 8px;
+                min-height: 20px;
                 border-radius: 3px;
+                margin: 0 4px;
             }}
             QListWidget::item:selected {{
-                background-color: {p.selection};
+                background-color: {p.surface_active};
+            }}
+            QListWidget::item:hover {{
+                background-color: {p.surface_hover};
             }}
         """)
         self._list.itemDoubleClicked.connect(self._on_item_double_clicked)
@@ -163,7 +167,7 @@ class OutputTab(QPlainTextEdit):
         mono = QFont("JetBrains Mono, Cascadia Code, Consolas, Courier New")
         mono.setPointSize(10)
         self.setFont(mono)
-        from ui.design_system import get_design_system
+        from ui.design_system import get_design_system, FontSize
         p = get_design_system().palette
         self.setStyleSheet(f"""
             #OutputTab {{
@@ -172,6 +176,7 @@ class OutputTab(QPlainTextEdit):
                 border: none;
                 padding: 6px;
                 selection-background-color: {p.selection};
+                font-size: {FontSize.SM}px;
             }}
         """)
         event_bus.subscribe("log_message", self._on_log)
@@ -209,7 +214,7 @@ class DockHeader(QWidget):
         self._lbl = QLabel("TERMINAL")
         self._lbl.setStyleSheet(f"""
             color: {p.text_tertiary};
-            font-size: {FontSize.XS}px;
+            font-size: 10px;
             font-weight: {FontWeight.SEMIBOLD};
             letter-spacing: 0.06em;
             background-color: transparent;
@@ -251,7 +256,7 @@ class BottomDock(QWidget):
     def __init__(self, event_bus):
         super().__init__()
         self.event_bus = event_bus
-        self._collapsed = False
+        self._collapsed = False  # Start EXPANDED to show terminal
         self._working_dir = Path.cwd()
         self._main_splitter = None
         self._expanded_height = DOCK_DEFAULT_HEIGHT
@@ -307,7 +312,7 @@ class BottomDock(QWidget):
         self._tabs.setDocumentMode(True)
         self._tabs.setTabsClosable(False)
         self._tabs.setMovable(False)
-        from ui.design_system import get_design_system, FontSize
+        from ui.design_system import get_design_system, FontSize, FontWeight, Radius, Spacing
         p = get_design_system().palette
         self._tabs.setStyleSheet(f"""
             QTabWidget::pane {{
@@ -316,20 +321,24 @@ class BottomDock(QWidget):
             }}
             QTabBar {{
                 background-color: {p.bg_secondary};
+                qproperty-drawBase: 0;
             }}
             QTabBar::tab {{
                 background-color: transparent;
                 color: {p.text_tertiary};
-                padding: 4px 14px 3px 14px;
+                padding: 2px {Spacing.LG}px;
                 border: none;
                 border-right: 1px solid {p.border_subtle};
                 font-size: {FontSize.XS}px;
-                font-weight: 500;
-                min-width: 64px;
-                min-height: 26px;
+                font-weight: {FontWeight.MEDIUM};
+                min-width: 70px;
+                min-height: 28px;
+                max-height: 28px;
+                letter-spacing: 0.02em;
             }}
             QTabBar::tab:selected {{
                 color: {p.text};
+                font-weight: {FontWeight.SEMIBOLD};
                 border-bottom: 2px solid {p.accent};
                 background-color: {p.bg};
             }}
@@ -341,16 +350,16 @@ class BottomDock(QWidget):
         self._tabs.currentChanged.connect(self._on_main_tab_changed)
         layout.addWidget(self._tabs)
 
-        self._tabs.addTab(self.terminal_manager, "Terminal")
+        self._tabs.addTab(self.terminal_manager, "TERMINAL")
         
         self._problems = ProblemsTab(self.event_bus)
         self._output = OutputTab(self.event_bus)
         from ui.diagnostics_panel import DiagnosticsTab
         self._diagnostics = DiagnosticsTab(self.event_bus)
 
-        self._tabs.addTab(self._problems, "Problems")
-        self._tabs.addTab(self._output, "Output")
-        self._tabs.addTab(self._diagnostics, "Diagnostics")
+        self._tabs.addTab(self._problems, "PROBLEMS")
+        self._tabs.addTab(self._output, "OUTPUT")
+        self._tabs.addTab(self._diagnostics, "DEBUG CONSOLE")
 
     def set_main_splitter(self, splitter):
         self._main_splitter = splitter
@@ -397,8 +406,10 @@ class BottomDock(QWidget):
             sizes = self._main_splitter.sizes()
             if len(sizes) == 2:
                 if self._collapsed:
-                    self._expanded_height = sizes[1]
-                    self._main_splitter.setSizes([sizes[0] + sizes[1], 0])
+                    self._expanded_height = max(DOCK_MIN_HEIGHT, sizes[1])
+                    # Collapsed = keep thin header, give rest back to editor
+                    total = sizes[0] + sizes[1]
+                    self._main_splitter.setSizes([total - DOCK_MIN_HEIGHT, DOCK_MIN_HEIGHT])
                 else:
                     target = self._expanded_height if self._expanded_height > DOCK_MIN_HEIGHT else DOCK_DEFAULT_HEIGHT
                     total = sizes[0] + sizes[1]
