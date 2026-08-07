@@ -164,6 +164,23 @@ class ToolManager:
         """
         logger.info(f"Executing tool: '{name}' | action: '{action}' | args: {kwargs}")
 
+        if self._requires_confirmation(name, action) and not kwargs.get("confirm", False):
+            msg = (
+                f"Tool '{name}.{action}' requires explicit confirmation before proceeding. "
+                f"Retry with confirm=True after verifying the target."
+            )
+            logger.warning(msg)
+            return ToolResult(
+                success=False,
+                tool_name=name,
+                error=msg,
+                metadata={
+                    "requires_confirmation": True,
+                    "tool": name,
+                    "action": action,
+                },
+            )
+
         # Permission check placeholder
         if not self._check_permissions(name, action):
             msg = f"Permission denied for tool '{name}' action '{action}'."
@@ -210,3 +227,10 @@ class ToolManager:
         """
         # TODO: Replace with real permission table
         return True
+
+    def _requires_confirmation(self, tool_name: str, action: str) -> bool:
+        """Return True for destructive actions that must be confirmed."""
+        destructive_actions = {"delete", "delete_file"}
+        if tool_name == "file" and action in destructive_actions:
+            return True
+        return False

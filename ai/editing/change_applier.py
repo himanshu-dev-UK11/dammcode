@@ -119,6 +119,16 @@ class ChangeApplier:
         # Sort operations by type and dependencies
         operations = self._sort_operations(change_set.operations)
 
+        if self._has_unconfirmed_destructive_changes(operations, request):
+            self._publish_confirmation_required(request, operations)
+            return ApplyResult(
+                success=False,
+                applied_count=0,
+                failed_count=len([op for op in operations if op.op_type == OperationType.DELETE]),
+                errors=["Destructive file changes require confirmation before applying."],
+                rollback_id=None,
+            )
+
         # Apply operations
         applied = 0
         failed = 0
@@ -126,7 +136,7 @@ class ChangeApplier:
 
         for i, op in enumerate(operations):
             try:
-                self._apply_operation(op)
+                self._apply_operation(op, request)
                 applied += 1
                 self._publish_progress(request, int((i + 1) / len(operations) * 100))
             except Exception as exc:
@@ -163,12 +173,12 @@ class ChangeApplier:
 
     # ── Operation application ────────────────────────────────────────────────
 
-    def _apply_operation(self, op: ChangeOperation) -> None:
+    def _apply_operation(self, op: ChangeOperation, request: ChangeRequest) -> None:
         """Apply a single operation."""
         if op.op_type == OperationType.CREATE:
             self._apply_create(op)
         elif op.op_type == OperationType.DELETE:
-            self._apply_delete(op)
+            self._apply_delete(op, request)
         elif op.op_type == OperationType.MODIFY:
             self._apply_modify(op)
         elif op.op_type == OperationType.RENAME:
@@ -184,11 +194,14 @@ class ChangeApplier:
         path.write_text(content, encoding="utf-8")
         logger.info(f"ChangeApplier: created '{op.source_path}' ({len(content)} chars)")
 
-    def _apply_delete(self, op: ChangeOperation) -> None:
+    def _apply_delete(self, op: ChangeOperation, request: ChangeRequest) -> None:
         """Delete a file."""
         path = self._root / op.source_path
         if path.exists():
-            path.unlink()
+            if path.is_dir():
+                shutil.rmtree(path)
+            else:
+                path.unlink()
             logger.info(f"ChangeApplier: deleted '{op.source_path}'")
         else:
             logger.warning(f"ChangeApplier: file not found for deletion: {op.source_path}")
@@ -305,4 +318,20 @@ class ChangeApplier:
             "errors": errors,
             "files": change_set.files,
             "rollback_id": request.rollback_id,
+        })
+
+    def _has_unconfirmed_destructive_changes(self, operations: List[ChangeOperation], request: ChangeRequest) -> bool:
+        """Block destructive changes until explicitly confirmed."""
+        if request.metadata.get("confirmed_destructive", False):
+            return False
+        return any(op.op_type == OperationType.DELETE for op in operations)
+
+    def _publish_confirmation_required(self, request: ChangeRequest, operations: List[ChangeOperation]) -> None:
+        """Notify the UI that confirmation is required before destructive changes apply."""
+        destructive_files = [op.source_path for op in operations if op.op_type == OperationType.DELETE]
+        self.event_bus.publish("edit_confirmation_required", {
+            "request_id": request.request_id,
+            "reason": "Deleting files or folders requires confirmation.",
+            "files": destructive_files,
+            "operation_count": len(destructive_files),
         })
