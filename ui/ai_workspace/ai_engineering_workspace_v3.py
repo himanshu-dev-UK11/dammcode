@@ -84,9 +84,9 @@ class AIEngineeringWorkspaceV3(QWidget):
     """
 
     # Panel size constraints
-    MIN_WIDTH = 320  # Increased from 280 for better content visibility
-    DEFAULT_WIDTH = 400  # Increased from 360 for better default experience
-    MAX_WIDTH = 600  # Increased from 560 for flexibility
+    MIN_WIDTH = 450  # Keep the dock readable by default
+    DEFAULT_WIDTH = 500  # Better default experience for the AI workspace
+    MAX_WIDTH = 720  # Allow a wider readable dock when space is available
 
     def __init__(self, event_bus, chat_engine=None):
         super().__init__()

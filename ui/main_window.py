@@ -361,8 +361,8 @@ class MainWindow(QMainWindow):
             # --- AI PANEL ---
             with ProfilePhase("ai_panel_init"):
                 self.ai_workspace = AIEngineeringWorkspaceV3(self.event_bus)
-                self.ai_workspace.setMinimumWidth(320)  # Updated to match new MIN_WIDTH
-                self.ai_workspace.setMaximumWidth(600)  # Updated to match new MAX_WIDTH
+                self.ai_workspace.setMinimumWidth(450)  # Keep default AI dock readable
+                self.ai_workspace.setMaximumWidth(720)  # Allow a wider default AI dock
                 self._top_splitter.addWidget(self.ai_workspace)
                 self._top_splitter.setStretchFactor(2, 0)  # AI panel doesn't auto-stretch
 
@@ -560,7 +560,7 @@ class MainWindow(QMainWindow):
             return
         
         # Save current width before hiding
-        self._ai_panel_width = max(320, self.ai_workspace.width())
+        self._ai_panel_width = max(450, self.ai_workspace.width())
         
         # Hide the AI workspace
         self.ai_workspace.setVisible(False)
@@ -589,8 +589,9 @@ class MainWindow(QMainWindow):
             sidebar_w, editor_w, _ = sizes
             # Restore AI panel width (or use default 30% of workspace)
             total_w = sidebar_w + editor_w
-            ai_w = getattr(self, "_ai_panel_width", max(380, min(600, int(total_w * 0.30))))
-            new_editor_w = max(400, total_w - ai_w)
+            ai_w = getattr(self, "_ai_panel_width", max(500, min(720, int(total_w * 0.34))))
+            ai_w = max(450, min(720, ai_w))
+            new_editor_w = max(320, total_w - ai_w)
             
             self._top_splitter.setSizes([sidebar_w, new_editor_w, ai_w])
         
@@ -946,7 +947,7 @@ class MainWindow(QMainWindow):
             if len(sizes) >= 3:
                 total_width = sum(sizes)
                 if total_width > 0:
-                    ai_width = min(400, max(320, int(total_width * 0.27)))
+                    ai_width = min(720, max(450, int(total_width * 0.34)))
                     editor_width = total_width - ai_width
                     self._top_splitter.setSizes([0, editor_width, ai_width])
     
@@ -958,7 +959,7 @@ class MainWindow(QMainWindow):
                 total_width = sum(sizes)
                 if total_width > 0:
                     sidebar_w = max(Sidebar.MIN_WIDTH, min(Sidebar.MAX_WIDTH, int(total_width * 0.18)))
-                    ai_w = max(320, min(600, int(total_width * 0.27)))
+                    ai_w = max(450, min(720, int(total_width * 0.34)))
                     editor_w = total_width - sidebar_w - ai_w
                     self._top_splitter.setSizes([sidebar_w, editor_w, ai_w])
 
@@ -986,7 +987,7 @@ class MainWindow(QMainWindow):
             explorer_w = 0
         
         # AI workspace gets more space (30% instead of 27% for better initial view)
-        ai_w = max(380, min(600, int(workspace_w * 0.30)))
+        ai_w = max(450, min(720, int(workspace_w * 0.34)))
         
         # Editor gets the remaining space
         editor_w = max(400, workspace_w - explorer_w - ai_w)
